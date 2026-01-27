@@ -10,6 +10,6 @@ interface UsersService {
     ): User
 
     fun getUserById(id: Long): User
-    fun getUserByUsername(username: String): User
+    fun getUserByEmail(email: String): User
     fun getUserByAuthCredentials(email: String, passwordRaw: String): User
 }

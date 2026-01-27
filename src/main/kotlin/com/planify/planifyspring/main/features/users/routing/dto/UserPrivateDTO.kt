@@ -12,7 +12,7 @@ data class UserPrivateDTO(
     override val email: String
 ) : UserPrivateDTOI {
     companion object {
-        fun fromUserEntity(entity: User): UserPrivateDTO = UserPrivateDTO(
+        fun fromEntity(entity: User): UserPrivateDTO = UserPrivateDTO(
             id = entity.id,
             username = entity.username,
             email = entity.email
