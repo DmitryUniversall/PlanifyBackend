@@ -1,5 +1,7 @@
 package com.planify.planifyspring.main.features.auth.domain.services_impl
 
+import com.planify.planifyspring.main.common.SecurityHelper
+import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
 import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidSessionHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.SuspiciousActivityDetectedHttpException
@@ -7,17 +9,31 @@ import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenExpir
 import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenInvalidHttpException
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
+import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
-import com.planify.planifyspring.main.features.users.domain.entities.User
-import com.planify.planifyspring.main.features.users.domain.services.UsersService
+import org.springframework.cache.CacheManager
+import org.springframework.cache.get
 import org.springframework.stereotype.Service
 
 @Service
 class AuthServiceImpl(
     private val tokensRepository: TokensRepository,
     private val sessionsRepository: SessionsRepository,
-    private val usersService: UsersService
+    private val usersRepository: UsersRepository,
+    private val cacheManager: CacheManager
 ) : AuthService {
+    private fun isSuspiciousActivity(session: AuthSession, currentUserAgent: String): Boolean {
+        return false  // TODO
+    }
+
+    private fun handleSuspiciousActivity(session: AuthSession, currentUserAgent: String) {
+        // TODO
+    }
+
+    private fun generateTokenUuid(): String {
+        return tokensRepository.generateTokenUuid()
+    }
+
     private fun getAccessTokenPayload(accessToken: String): AuthTokenPayload {
         val payload = tokensRepository.decodeJwtToken(accessToken)
         if (payload.type == AuthTokenType.REFRESH) throw TokenInvalidHttpException("Access token expected")
@@ -30,16 +46,50 @@ class AuthServiceImpl(
         return payload
     }
 
-    private fun isSuspiciousActivity(session: AuthSession, user: User, currentUserAgent: String): Boolean {
-        return false
-    }
-
-    private fun handleSuspiciousActivity(session: AuthSession, user: User, currentUserAgent: String) {
-        // TODO
-    }
-
     private fun getSession(userId: Long, sessionUuid: String): AuthSession {
-        return sessionsRepository.getSession(userId = userId, sessionUuid = sessionUuid) ?: throw InvalidSessionHttpException("Unknown session")
+        val cache = cacheManager.getCache("sessions")!!
+        val cached = cache.get<AuthSession>("$userId-$sessionUuid")
+        if (cached != null) return cached
+
+        return (
+            sessionsRepository.getSession(
+                userId = userId,
+                sessionUuid = sessionUuid
+            ) ?: throw InvalidSessionHttpException("Unknown session")
+        ).also { cache.put("$userId-$sessionUuid", it) }
+    }
+
+    private fun saveSession(session: AuthSession) {
+        val usersCache = cacheManager.getCache("sessions")
+        usersCache?.evict("${session.userId}-${session.uuid}")
+
+        sessionsRepository.updateSession(session)
+    }
+
+    private fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean = true) {
+        val usersCache = cacheManager.getCache("sessions")
+        usersCache?.evict("$userId-$sessionUuid")
+
+        return sessionsRepository.revokeSession(userId = userId, sessionUuid = sessionUuid, soft = soft)
+    }
+
+    private fun createSession(
+        userId: Long,
+        userAgent: String,
+        sessionName: String,
+        accessTokenUuid: String,
+        refreshTokenUuid: String
+    ): AuthSession {
+        return sessionsRepository.createSession(
+            userId = userId,
+            userAgent = userAgent,
+            sessionName = sessionName,
+            accessTokenUuid = accessTokenUuid,
+            refreshTokenUuid = refreshTokenUuid,
+        ).also {
+            val cache = cacheManager.getCache("sessions")!!
+            cache.put("${it.userId}-${it.uuid}", it)
+        }
     }
 
     private fun startSession(
@@ -48,10 +98,10 @@ class AuthServiceImpl(
         sessionName: String
     ): Pair<AuthSession, AuthTokenPair> {
 
-        val newAccessTokenUuid = tokensRepository.generateTokenUuid()
-        val newRefreshTokenUuid = tokensRepository.generateTokenUuid()
+        val newAccessTokenUuid = generateTokenUuid()
+        val newRefreshTokenUuid = generateTokenUuid()
 
-        val session = sessionsRepository.createSession(
+        val session = createSession(
             userId = userId,
             userAgent = userAgent,
             sessionName = sessionName,
@@ -73,14 +123,14 @@ class AuthServiceImpl(
         )
     }
 
-    override fun authenticate(accessToken: String): AuthInfo {
+    override fun authenticate(accessToken: String): AuthContext {
         val payload = getAccessTokenPayload(accessToken)
 
         val session = getSession(userId = payload.userId, sessionUuid = payload.sessionUuid)
         if (session.accessTokenUuid != payload.uuid) throw TokenExpiredHttpException("Invalid token for this session")
 
-        val user = usersService.getUserById(id = payload.userId)
-        return AuthInfo(user = user, session = session)
+        val (user, accessInfo) = getUserByIdWithAccessInfo(id = payload.userId)
+        return AuthContext(session = session, user = user, accessInfo = accessInfo)
     }
 
     override fun refresh(refreshToken: String, currentUserAgent: String): AuthTokenPair {
@@ -89,16 +139,17 @@ class AuthServiceImpl(
         val session = getSession(userId = payload.userId, sessionUuid = payload.sessionUuid)
         if (session.refreshTokenUuid != payload.uuid) throw TokenExpiredHttpException("Invalid token for this session")
 
-        val user = usersService.getUserById(id = payload.userId)
-        if (!isSuspiciousActivity(session, user, currentUserAgent)) {
-            handleSuspiciousActivity(session, user, currentUserAgent)
+        // TODO: Fetch user here to see is it valid and active?
+
+        if (!isSuspiciousActivity(session, currentUserAgent)) {
+            handleSuspiciousActivity(session, currentUserAgent)
             throw SuspiciousActivityDetectedHttpException(message = "Suspicious activity detected")
         }
 
-        val newAccessTokenPayload = tokensRepository.createAccessTokenPayload(userId = user.id, sessionUuid = session.uuid)
-        val newRefreshTokenPayload = tokensRepository.createRefreshTokenPayload(userId = user.id, sessionUuid = session.uuid)
+        val newAccessTokenPayload = tokensRepository.createAccessTokenPayload(userId = session.userId, sessionUuid = session.uuid)
+        val newRefreshTokenPayload = tokensRepository.createRefreshTokenPayload(userId = session.userId, sessionUuid = session.uuid)
 
-        sessionsRepository.updateSession(
+        saveSession(
             session.copy(
                 accessTokenUuid = newAccessTokenPayload.uuid,
                 refreshTokenUuid = newRefreshTokenPayload.uuid,
@@ -112,7 +163,7 @@ class AuthServiceImpl(
     }
 
     override fun revokeSession(userId: Long, sessionUuid: String) {
-        sessionsRepository.revokeSession(userId = userId, sessionUuid = sessionUuid)
+        revokeSession(userId = userId, sessionUuid = sessionUuid, soft = true)
     }
 
     override fun login(
@@ -120,30 +171,86 @@ class AuthServiceImpl(
         passwordRaw: String,
         userAgent: String,
         sessionName: String
-    ): Pair<AuthInfo, AuthTokenPair> {
-        val user = usersService.getUserByAuthCredentials(email, passwordRaw)
-        val (session, tokenPair) = startSession(
+    ): Pair<AuthContext, AuthTokenPair> {
+        val (user, accessInfo) = getUserByCredentialsWithAccessInfo(email, passwordRaw)
+
+        val (session, tokens) = startSession(
             userId = user.id,
             userAgent = userAgent,
             sessionName = sessionName
         )
 
-        return AuthInfo(user = user, session = session) to tokenPair
+        return AuthContext(
+            session = session,
+            user = user,
+            accessInfo = accessInfo
+        ) to tokens
     }
 
     override fun register(
+        username: String,
         email: String,
         passwordRaw: String,
         userAgent: String,
         sessionName: String
-    ): Pair<AuthInfo, AuthTokenPair> {
-        val user = usersService.getUserByAuthCredentials(email, passwordRaw)
-        val (session, tokenPair) = startSession(
+    ): Pair<AuthContext, AuthTokenPair> {
+        val user = createUser(username, email, passwordRaw)
+        val (session, tokens) = startSession(
             userId = user.id,
             userAgent = userAgent,
             sessionName = sessionName
         )
 
-        return AuthInfo(user = user, session = session) to tokenPair
+        return AuthContext(
+            session = session,
+            user = user,
+            accessInfo = AccessInfo()
+        ) to tokens
+    }
+
+    override fun createUser(
+        username: String,
+        email: String,
+        passwordRaw: String
+    ): User {
+        return usersRepository.create(
+            username = username,
+            email = email,
+            passwordHash = SecurityHelper.hashPassword(passwordRaw)
+        ).also {
+            val cache = cacheManager.getCache("users")!!
+            cache.put(it.id, it)
+        }
+    }
+
+    override fun getUserById(id: Long): User {
+        val cache = cacheManager.getCache("users")!!
+        val cached = cache.get<User>(id)
+        if (cached != null) return cached
+
+        val user = usersRepository.getById(id)
+        return user ?: throw NotFoundHttpException("User was not found")
+    }
+
+    override fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo> {
+        val cache = cacheManager.getCache("usersWithAccess")!!
+        val cached = cache.get<Pair<User, AccessInfo>>(id)
+        if (cached != null) return cached
+
+        val result = usersRepository.getByIdWithAccessInfo(id)
+        return result ?: throw NotFoundHttpException("User was not found")
+    }
+
+    override fun getUserByCredentials(  // TODO: Cache?
+        email: String,
+        passwordRaw: String
+    ): User {
+        val user = usersRepository.getByAuthCredentials(email, passwordRaw)
+        return user ?: throw NotFoundHttpException("User was not found")
+    }
+
+    override fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo> {
+        val result = usersRepository.getByAuthCredentialsWithAccessInfo(email, passwordRaw)
+        return result ?: throw NotFoundHttpException("User was not found")
     }
 }

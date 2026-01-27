@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
-import com.planify.planifyspring.main.config.SecurityConfig
+import com.planify.planifyspring.main.common.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPayload
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenType
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
@@ -19,7 +19,7 @@ class TokensRepositoryImpl : TokensRepository {
             .claim("type", payload.type.code)
             .claim("userId", payload.userId)
             .claim("sessionUuid", payload.sessionUuid)
-            .signWith(SecurityConfig.secretKey)
+            .signWith(SecurityHelper.secretKey)
             .compact()
     }
 
@@ -29,7 +29,7 @@ class TokensRepositoryImpl : TokensRepository {
 
     override fun decodeJwtToken(token: String): AuthTokenPayload {
         val claims = Jwts.parserBuilder()
-            .setSigningKey(SecurityConfig.secretKey)
+            .setSigningKey(SecurityHelper.secretKey)
             .build()
             .parseClaimsJws(token)
             .body
@@ -58,7 +58,7 @@ class TokensRepositoryImpl : TokensRepository {
         return AuthTokenPayload(
             uuid = tokenUuid ?: generateTokenUuid(),
             type = AuthTokenType.ACCESS,
-            expiresAt = SecurityConfig.calculateAccessTokenExpiresAt(),
+            expiresAt = SecurityHelper.calculateAccessTokenExpiresAt(),
             userId = userId,
             sessionUuid = sessionUuid,
         )
@@ -85,7 +85,7 @@ class TokensRepositoryImpl : TokensRepository {
         return AuthTokenPayload(
             uuid = tokenUuid ?: generateTokenUuid(),
             type = AuthTokenType.REFRESH,
-            expiresAt = SecurityConfig.calculateRefreshTokenExpiresAt(),
+            expiresAt = SecurityHelper.calculateRefreshTokenExpiresAt(),
             userId = userId,
             sessionUuid = sessionUuid
         )

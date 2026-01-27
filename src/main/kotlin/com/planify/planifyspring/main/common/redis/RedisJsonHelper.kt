@@ -2,11 +2,11 @@ package com.planify.planifyspring.main.common.redis
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import tools.jackson.databind.ObjectMapper
 import kotlin.reflect.full.memberProperties
 
-@Service
+@Component
 class RedisJsonHelper(
     private val stringRedisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper
@@ -51,7 +51,7 @@ class RedisJsonHelper(
         return objectMapper.convertValue(parsedMap, clazz)
     }
 
-    fun <T: Any> hgetAllDataClasses(base: String, clazz: Class<T>): List<T> {
+    fun <T : Any> hgetAllDataClasses(base: String, clazz: Class<T>): List<T> {
         val keys = stringRedisTemplate.opsForHash<String, String>().keys(base)
 
         val result = ArrayList<T>()

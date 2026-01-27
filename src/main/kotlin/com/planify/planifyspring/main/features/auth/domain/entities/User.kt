@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.users.domain.entities
+package com.planify.planifyspring.main.features.auth.domain.entities
 
 data class User(
     val id: Long,

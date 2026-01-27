@@ -1,6 +1,6 @@
-package com.planify.planifyspring.main.features.users.routing.dto
+package com.planify.planifyspring.main.features.auth.routing.dto
 
-import com.planify.planifyspring.main.features.users.domain.entities.User
+import com.planify.planifyspring.main.features.auth.domain.entities.User
 
 interface UserPublicDTOI {
     val id: Long

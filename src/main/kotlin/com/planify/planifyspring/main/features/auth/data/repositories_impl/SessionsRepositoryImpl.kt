@@ -1,9 +1,8 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
 import com.planify.planifyspring.main.common.redis.RedisJsonHelper
-import com.planify.planifyspring.main.config.SecurityConfig
+import com.planify.planifyspring.main.common.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidSessionHttpException
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import org.springframework.stereotype.Repository
 import java.util.*
@@ -47,7 +46,7 @@ class SessionsRepositoryImpl(
             userAgent = userAgent,
             createdAt = Date(),
             lastUsedAt = Date(),
-            expiresAt = SecurityConfig.calculateSessionExpiresAt()
+            expiresAt = SecurityHelper.calculateSessionExpiresAt()
         )
 
         writeSession(session)

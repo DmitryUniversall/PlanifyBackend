@@ -1,0 +1,31 @@
+package com.planify.planifyspring.main.features.auth.data.models
+
+import com.planify.planifyspring.main.features.auth.domain.entities.Role
+import jakarta.persistence.*
+
+@Entity
+data class RoleModel(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0,
+
+    val name: String,
+
+    @ManyToMany(mappedBy = "roles")
+    val users: MutableSet<UserModel> = mutableSetOf(),
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "role_authorities",
+        joinColumns = [JoinColumn(name = "role_id")],
+        inverseJoinColumns = [JoinColumn(name = "authority_id")]
+    )
+    val authorities: MutableSet<AuthorityModel> = mutableSetOf(),
+) {
+    fun toEntity(): Role {
+        return Role(
+            id = id,
+            name = name
+        )
+    }
+}

@@ -29,3 +29,39 @@ class InvalidSessionHttpException(
     appCode = 3010,
     message = message
 )
+
+class AuthorizationNotSpecifiedHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3001,
+    message = message
+)
+
+class AuthorizationTypeUnknownHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3003,
+    message = message
+)
+
+
+class AuthorizationTokenNotSpecifiedHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3004,
+    message = message
+)
+
+class AuthorizationFailedHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3013,
+    message = message
+)
+
+class UnknownUserHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3008,
+    message = message
+)

@@ -4,20 +4,20 @@ import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.routing.auth.ProtectedRoute
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
-import com.planify.planifyspring.main.features.auth.domain.utils.authInfo
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthSessionPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthTokenPairDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
-import com.planify.planifyspring.main.features.users.routing.dto.UserPrivateDTO
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ServerWebExchange
 
 @RestController("/auth")
 class AuthFeatureController(
@@ -51,6 +51,7 @@ class AuthFeatureController(
     ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
         val (info, tokens) = authService.register(
             email = body.email,
+            username = body.username,
             passwordRaw = body.password,
             userAgent = userAgent,
             sessionName = "${userAgent}-${getRandomString(8)}"
@@ -86,10 +87,9 @@ class AuthFeatureController(
     @ProtectedRoute
     @GetMapping("/logout")
     fun logout(
-        exchange: ServerWebExchange
+        @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        val authInfo = exchange.authInfo()!!
-        authService.revokeSession(userId = authInfo.user.id, sessionUuid = authInfo.session.uuid)
+        authService.revokeSession(userId = authContext.user.id, sessionUuid = authContext.session.uuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -97,10 +97,9 @@ class AuthFeatureController(
     @DeleteMapping("/session/{sessionUuid}")
     fun revokeSession(
         @PathVariable sessionUuid: String,
-        exchange: ServerWebExchange
+        @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        val authInfo = exchange.authInfo()!!
-        authService.revokeSession(userId = authInfo.user.id, sessionUuid = sessionUuid)
+        authService.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 }

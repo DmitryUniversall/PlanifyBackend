@@ -1,10 +1,12 @@
 package com.planify.planifyspring.main.features.auth.domain.services
 
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthInfo
+import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
+import com.planify.planifyspring.main.features.auth.domain.entities.User
+import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 
 interface AuthService {
-    fun authenticate(accessToken: String): AuthInfo
+    fun authenticate(accessToken: String): AuthContext
 
     fun refresh(refreshToken: String, currentUserAgent: String): AuthTokenPair
 
@@ -18,12 +20,25 @@ interface AuthService {
         passwordRaw: String,
         userAgent: String,
         sessionName: String
-    ): Pair<AuthInfo, AuthTokenPair>
+    ): Pair<AuthContext, AuthTokenPair>
 
     fun register(
+        username: String,
         email: String,
         passwordRaw: String,
         userAgent: String,
         sessionName: String
-    ): Pair<AuthInfo, AuthTokenPair>
+    ): Pair<AuthContext, AuthTokenPair>
+
+    fun createUser(
+        username: String,
+        email: String,
+        passwordRaw: String
+    ): User
+
+    fun getUserById(id: Long): User
+    fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
+
+    fun getUserByCredentials(email: String, passwordRaw: String): User
+    fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
 }

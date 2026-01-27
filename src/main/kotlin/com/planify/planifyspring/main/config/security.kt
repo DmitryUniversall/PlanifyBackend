@@ -1,30 +1,31 @@
 package com.planify.planifyspring.main.config
 
-import io.jsonwebtoken.security.Keys
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
-import java.util.*
-import javax.crypto.SecretKey
+import com.planify.planifyspring.main.features.auth.filters.JWTAuthFilter
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
-object SecurityConfig {
-    val secretString = System.getenv("JWT_SECRET")!!
-    val secretKey: SecretKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secretString))
+@Configuration
+@EnableMethodSecurity
+class ApplicationSecurityConfig(
+    private val jwtAuthFilter: JWTAuthFilter
+) {
 
-    fun calculateAccessTokenExpiresAt(): Date {
-        return Date(Date().time + (60 * 60 * 1))
-    }
+    @Bean
+    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .csrf { it.disable() }
+            .authorizeHttpRequests {
+                it.requestMatchers("/auth/login").permitAll()
+                it.requestMatchers("/auth/register").permitAll()
+                it.requestMatchers("/auth/refresh").permitAll()
+                it.anyRequest().authenticated()
+            }
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
-    fun calculateRefreshTokenExpiresAt(): Date {
-        return Date(Date().time + (60 * 60 * 12))
-    }
-
-    fun calculateSessionExpiresAt(): Date {
-        return Date(Date().time + (60 * 60 * 12))
-    }
-
-    fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder(12)
-
-    fun hashPassword(password: String): String {
-        return passwordEncoder().encode(password)!!
+        return http.build()
     }
 }
