@@ -1,6 +1,8 @@
 package com.planify.planifyspring.main.exceptions.handlers
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
+import com.planify.planifyspring.core.exceptions.ApplicationException
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.exceptions.ApplicationHttpException
 import org.slf4j.LoggerFactory
@@ -11,9 +13,10 @@ import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
+import org.springframework.web.servlet.NoHandlerFoundException
 
 @RestControllerAdvice
-class GlobalExceptionHandler {
+class GlobalExceptionHandler {  // TODO: Split this into different handlers
     companion object {
         fun buildErrorResponse(
             error: Exception,
@@ -78,7 +81,50 @@ class GlobalExceptionHandler {
         return buildErrorResponse(
             error = e,
             status = HttpStatus.METHOD_NOT_ALLOWED,
-            appCode = 2008  // TODO: Create method not allowed appcode
+            appCode = 2010
+        )
+    }
+
+    @ExceptionHandler(NoHandlerFoundException::class)
+    fun handleNoHandlerFoundException(
+        e: NoHandlerFoundException,
+        request: WebRequest
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        return buildErrorResponse(
+            error = e,
+            status = HttpStatus.NOT_FOUND,
+            appCode = 2008,
+            message = "Route does not exists"
+        )
+    }
+
+    @ExceptionHandler(ApplicationException::class)
+    fun handleApplicationHttpException(
+        e: ApplicationException,
+        request: WebRequest
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        logger.warn("Unexpected application error occurred", e)
+
+        return buildErrorResponse(
+            error = e,
+            status = HttpStatus.INTERNAL_SERVER_ERROR,
+            appCode = 2000,
+            message = "Internal server error"
+        )
+    }
+
+    @ExceptionHandler(AlreadyExistsAppError::class)
+    fun handleApplicationHttpException(
+        e: AlreadyExistsAppError,
+        request: WebRequest
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        logger.warn("Unexpected AlreadyExistsAppError occurred", e)
+
+        return buildErrorResponse(
+            error = e,
+            status = HttpStatus.CONFLICT,
+            appCode = 2001,
+            message = "Already exists"
         )
     }
 
@@ -95,7 +141,3 @@ class GlobalExceptionHandler {
         )
     }
 }
-
-// TODO: NoResourceFoundException (No static resource auth/refresh for request '/api/v1/auth/refresh/')
-// TODO: io.jsonwebtoken.MalformedJwtException: JWT strings must contain exactly 2 period characters. Found: 0
-// TODO: Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "users_username_key"

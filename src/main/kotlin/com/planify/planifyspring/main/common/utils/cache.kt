@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.common.utils
 import org.springframework.cache.Cache
 import tools.jackson.databind.ObjectMapper
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 class JsonCacheWrapper(
     val delegate: Cache,
@@ -16,27 +17,10 @@ class JsonCacheWrapper(
         }
     }
 
-    fun put(key: String, value: Any?) {
-        delegate.put(key, value)
-    }
-
-    override fun retrieve(key: Any): CompletableFuture<*>? {
-        return delegate.retrieve(key)
-    }
-
-//    override fun <T : Any> retrieve(key: Any, valueLoader: Supplier<CompletableFuture<T>>): CompletableFuture<T?> {
-//        return delegate.retrieve(key, valueLoader)
-//    }
-
-    override fun putIfAbsent(key: Any, value: Any?): Cache.ValueWrapper? {
-        return delegate.putIfAbsent(key, value)
-    }
-
-    override fun evictIfPresent(key: Any): Boolean {
-        return delegate.evictIfPresent(key)
-    }
-
-    override fun invalidate(): Boolean {
-        return delegate.invalidate()
-    }
+    fun put(key: String, value: Any?) = delegate.put(key, value)
+    override fun <T : Any> retrieve(key: Any, valueLoader: Supplier<CompletableFuture<T>>): CompletableFuture<T> = delegate.retrieve(key, valueLoader)
+    override fun retrieve(key: Any): CompletableFuture<*>? = delegate.retrieve(key)
+    override fun putIfAbsent(key: Any, value: Any?): Cache.ValueWrapper? = delegate.putIfAbsent(key, value)
+    override fun evictIfPresent(key: Any): Boolean = delegate.evictIfPresent(key)
+    override fun invalidate(): Boolean = delegate.invalidate()
 }

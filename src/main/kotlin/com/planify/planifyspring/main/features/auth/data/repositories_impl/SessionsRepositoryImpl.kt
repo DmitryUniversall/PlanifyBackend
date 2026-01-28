@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
-import com.planify.planifyspring.main.common.redis.RedisJsonHelper
+import com.planify.planifyspring.main.common.utils.redis.RedisJsonHelper
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository

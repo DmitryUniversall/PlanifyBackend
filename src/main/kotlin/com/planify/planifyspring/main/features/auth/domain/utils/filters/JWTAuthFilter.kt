@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.auth.filters
+package com.planify.planifyspring.main.features.auth.domain.utils.filters
 
 import com.planify.planifyspring.main.features.auth.domain.exceptions.AuthorizationTokenNotSpecifiedHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.AuthorizationTypeUnknownHttpException
@@ -22,6 +22,7 @@ class JWTAuthFilter(
         val header = request.getHeader("Authorization")
 
         if (header == null) {
+            LoggerFactory.getLogger(this::class.java).info("AAAAAAAAAAAAAAA")
             filterChain.doFilter(request, response)
             return
         }

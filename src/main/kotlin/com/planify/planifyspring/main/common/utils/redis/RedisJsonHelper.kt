@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.common.redis
+package com.planify.planifyspring.main.common.utils.redis
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate

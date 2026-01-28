@@ -1,21 +1,25 @@
 package com.planify.planifyspring.main.features.auth.domain.services_impl
 
+import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
 import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
 import com.planify.planifyspring.main.common.utils.SecurityHelper
+import com.planify.planifyspring.main.exceptions.generics.AlreadyExistsHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InactiveSessionHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidSessionHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.SuspiciousActivityDetectedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenExpiredHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenInvalidHttpException
+import com.planify.planifyspring.main.features.auth.domain.exceptions.*
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.JwtException
+import io.jsonwebtoken.MalformedJwtException
+import io.jsonwebtoken.UnsupportedJwtException
+import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
+import java.security.SignatureException
 
 @Service
 class AuthServiceImpl(
@@ -25,6 +29,8 @@ class AuthServiceImpl(
     private val cacheManager: CacheManager,
     private val objectMapper: ObjectMapper
 ) : AuthService {
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     private fun isSuspiciousActivity(session: AuthSession, currentUserAgent: String): Boolean {
         return false  // TODO
     }
@@ -37,14 +43,31 @@ class AuthServiceImpl(
         return tokensRepository.generateTokenUuid()
     }
 
+    private fun decodeJwtToken(token: String): AuthTokenPayload {
+        try {
+            return tokensRepository.decodeJwtToken(token)
+        } catch (_: UnsupportedJwtException) {
+            throw TokenInvalidHttpException("Token uses an unsupported jwt algorithm")
+        } catch (_: MalformedJwtException) {
+            throw TokenInvalidHttpException("Token structure is invalid")
+        } catch (_: SignatureException) {
+            throw TokenInvalidHttpException("Signature validation failed")
+        } catch (_: ExpiredJwtException) {
+            throw TokenExpiredHttpException("Token expired")
+        } catch (error: JwtException) {
+            logger.warn("Unknown token validation error: ${error::class.qualifiedName}: ${error.message}")
+            throw TokenExpiredHttpException("Unknown token validation error")
+        }
+    }
+
     private fun getAccessTokenPayload(accessToken: String): AuthTokenPayload {
-        val payload = tokensRepository.decodeJwtToken(accessToken)
+        val payload = decodeJwtToken(accessToken)
         if (payload.type == AuthTokenType.REFRESH) throw TokenInvalidHttpException("Access token expected")
         return payload
     }
 
     private fun getRefreshTokenPayload(refreshToken: String): AuthTokenPayload {
-        val payload = tokensRepository.decodeJwtToken(refreshToken)
+        val payload = decodeJwtToken(refreshToken)
         if (payload.type == AuthTokenType.ACCESS) throw TokenInvalidHttpException("Refresh token expected")
         return payload
     }
@@ -57,7 +80,7 @@ class AuthServiceImpl(
         val session = sessionsRepository.getSession(
             userId = userId,
             sessionUuid = sessionUuid
-        )?: throw InvalidSessionHttpException("Unknown session")
+        ) ?: throw InvalidSessionHttpException("Unknown session")
 
         if (!session.active) throw InactiveSessionHttpException("This session is no more valid")
 
@@ -219,13 +242,17 @@ class AuthServiceImpl(
         email: String,
         passwordRaw: String
     ): User {
-        return usersRepository.create(
-            username = username,
-            email = email,
-            passwordHash = SecurityHelper.hashPassword(passwordRaw)
-        ).also {
-            val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
-            cache.put(it.id.toString(), it)
+        try {
+            return usersRepository.create(
+                username = username,
+                email = email,
+                passwordHash = SecurityHelper.hashPassword(passwordRaw)
+            ).also {
+                val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
+                cache.put(it.id.toString(), it)
+            }
+        } catch (error: AlreadyExistsAppError) {
+            throw AlreadyExistsHttpException(error.message)
         }
     }
 

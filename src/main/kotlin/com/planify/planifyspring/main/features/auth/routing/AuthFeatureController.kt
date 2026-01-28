@@ -2,7 +2,6 @@ package com.planify.planifyspring.main.features.auth.routing
 
 import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.routing.auth.ProtectedRoute
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
@@ -88,7 +87,6 @@ class AuthFeatureController(
         )
     }
 
-    @ProtectedRoute
     @GetMapping("/logout")
     fun logout(
         @AuthenticationPrincipal authContext: AuthContext
@@ -97,7 +95,6 @@ class AuthFeatureController(
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @ProtectedRoute
     @DeleteMapping("/session/{sessionUuid}")
     fun revokeSession(
         @PathVariable sessionUuid: String,

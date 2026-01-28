@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
+import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.data.jpa.UserJpaRepository
 import com.planify.planifyspring.main.features.auth.data.models.UserModel
@@ -19,6 +20,10 @@ class UsersRepositoryImpl(
             email = email,
             passwordHash = passwordHash
         )
+
+        if (userJpaRepository.existsByEmailAndUsername(email, username)) {  // TODO: Make faster check
+            throw AlreadyExistsAppError("User with this email or username already exists")
+        }
 
         userJpaRepository.save(model)
 

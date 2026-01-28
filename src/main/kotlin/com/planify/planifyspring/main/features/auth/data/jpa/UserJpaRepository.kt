@@ -33,4 +33,6 @@ interface UserJpaRepository : JpaRepository<UserModel, Long> {
     fun findByEmailWithRolesAndAuthorities(@Param("email") email: String): UserModel?
 
     fun findByEmail(email: String): UserModel?
+
+    fun existsByEmailAndUsername(email: String, username: String): Boolean
 }

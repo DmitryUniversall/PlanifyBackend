@@ -1,7 +1,6 @@
 package com.planify.planifyspring.main.features.auth.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.routing.auth.ProtectedRoute
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/users")
 class UsersFeatureController {
-    @ProtectedRoute
     @GetMapping("/me")
     fun getMe(
         @AuthenticationPrincipal authContext: AuthContext
