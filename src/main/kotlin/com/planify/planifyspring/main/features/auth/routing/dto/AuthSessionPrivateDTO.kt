@@ -18,7 +18,7 @@ data class AuthSessionPrivateDTO(
                 uuid = entity.uuid,
                 name = entity.name,
                 userId = entity.userId,
-                isActive = entity.isActive,
+                isActive = entity.active,
                 createdAt = entity.createdAt,
                 lastUsedAt = entity.lastUsedAt,
                 expiresAt = entity.expiresAt

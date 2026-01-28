@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
 import com.planify.planifyspring.main.common.redis.RedisJsonHelper
-import com.planify.planifyspring.main.common.SecurityHelper
+import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import org.springframework.stereotype.Repository
@@ -73,7 +73,7 @@ class SessionsRepositoryImpl(
     override fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean) {
         val sessionKey = getUserSessionKey(userId, sessionUuid)
         if (soft) {
-            updateSession(userId = userId, sessionUuid = sessionUuid, set = "isActive" to false)
+            updateSession(userId = userId, sessionUuid = sessionUuid, set = "active" to false)
         } else {
             helper.hdel(key = sessionKey)
         }

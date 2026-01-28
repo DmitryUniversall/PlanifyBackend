@@ -4,7 +4,8 @@ import com.planify.planifyspring.main.features.auth.domain.entities.Authority
 import jakarta.persistence.*
 
 @Entity
-data class AuthorityModel(
+@Table(name = "authorities")
+class AuthorityModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,

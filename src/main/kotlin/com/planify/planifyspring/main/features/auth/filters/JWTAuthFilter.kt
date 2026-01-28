@@ -6,6 +6,7 @@ import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -36,5 +37,6 @@ class JWTAuthFilter(
         val auth = UsernamePasswordAuthenticationToken(authContext, null, authorities)
 
         SecurityContextHolder.getContext().authentication = auth
+        filterChain.doFilter(request, response)
     }
 }

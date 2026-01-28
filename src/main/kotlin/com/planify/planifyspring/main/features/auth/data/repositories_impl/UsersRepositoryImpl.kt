@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
-import com.planify.planifyspring.main.common.SecurityHelper
+import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.data.jpa.UserJpaRepository
 import com.planify.planifyspring.main.features.auth.data.models.UserModel
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
@@ -39,16 +39,18 @@ class UsersRepositoryImpl(
     }
 
     override fun getByAuthCredentials(email: String, passwordRaw: String): User? {
-        val passwordHash = SecurityHelper.hashPassword(passwordRaw)
-        return userJpaRepository.findByEmailAndPasswordHash(email, passwordHash)?.toEntity()
+        val model = userJpaRepository.findByEmail(email) ?: return null
+        if (!SecurityHelper.isPasswordsMatch(passwordRaw, model.passwordHash)) return null
+        return model.toEntity()
     }
 
     override fun getByAuthCredentialsWithAccessInfo(
         email: String,
         passwordRaw: String
     ): Pair<User, AccessInfo>? {
-        val passwordHash = SecurityHelper.hashPassword(passwordRaw)
-        val model = userJpaRepository.findByEmailAndPasswordHashWithRolesAndAuthorities(email, passwordHash) ?: return null
+        val model = userJpaRepository.findByEmailWithRolesAndAuthorities(email) ?: return null
+        if (!SecurityHelper.isPasswordsMatch(passwordRaw, model.passwordHash)) return null
+
         return model.toEntity() to model.getAccessInfo()
     }
 }

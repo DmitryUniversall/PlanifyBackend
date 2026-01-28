@@ -27,10 +27,10 @@ interface UserJpaRepository : JpaRepository<UserModel, Long> {
         LEFT JOIN FETCH u.roles r
         LEFT JOIN FETCH r.authorities ra
         LEFT JOIN FETCH u.authorities ua
-        WHERE u.email = :email AND u.passwordHash == :passwordHash
+        WHERE u.email = :email
     """
     )
-    fun findByEmailAndPasswordHashWithRolesAndAuthorities(@Param("email") email: String, @Param("passwordHash") passwordHash: String): UserModel?
+    fun findByEmailWithRolesAndAuthorities(@Param("email") email: String): UserModel?
 
-    fun findByEmailAndPasswordHash(email: String, passwordHash: String): UserModel?
+    fun findByEmail(email: String): UserModel?
 }

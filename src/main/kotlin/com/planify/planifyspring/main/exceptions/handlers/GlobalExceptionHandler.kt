@@ -9,8 +9,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
 
+@RestControllerAdvice
 class GlobalExceptionHandler {
     companion object {
         fun buildErrorResponse(
@@ -93,3 +95,7 @@ class GlobalExceptionHandler {
         )
     }
 }
+
+// TODO: NoResourceFoundException (No static resource auth/refresh for request '/api/v1/auth/refresh/')
+// TODO: io.jsonwebtoken.MalformedJwtException: JWT strings must contain exactly 2 period characters. Found: 0
+// TODO: Caused by: org.postgresql.util.PSQLException: ERROR: duplicate key value violates unique constraint "users_username_key"

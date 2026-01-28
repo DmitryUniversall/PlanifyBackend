@@ -1,8 +1,10 @@
 package com.planify.planifyspring.main.features.auth.domain.services_impl
 
-import com.planify.planifyspring.main.common.SecurityHelper
+import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
+import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
+import com.planify.planifyspring.main.features.auth.domain.exceptions.InactiveSessionHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidSessionHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.SuspiciousActivityDetectedHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenExpiredHttpException
@@ -12,15 +14,16 @@ import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRe
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import org.springframework.cache.CacheManager
-import org.springframework.cache.get
 import org.springframework.stereotype.Service
+import tools.jackson.databind.ObjectMapper
 
 @Service
 class AuthServiceImpl(
     private val tokensRepository: TokensRepository,
     private val sessionsRepository: SessionsRepository,
     private val usersRepository: UsersRepository,
-    private val cacheManager: CacheManager
+    private val cacheManager: CacheManager,
+    private val objectMapper: ObjectMapper
 ) : AuthService {
     private fun isSuspiciousActivity(session: AuthSession, currentUserAgent: String): Boolean {
         return false  // TODO
@@ -47,16 +50,19 @@ class AuthServiceImpl(
     }
 
     private fun getSession(userId: Long, sessionUuid: String): AuthSession {
-        val cache = cacheManager.getCache("sessions")!!
-        val cached = cache.get<AuthSession>("$userId-$sessionUuid")
+        val cache = JsonCacheWrapper(cacheManager.getCache("sessions")!!, objectMapper)
+        val cached = cache.getAs<AuthSession>("$userId-$sessionUuid")
         if (cached != null) return cached
 
-        return (
-            sessionsRepository.getSession(
-                userId = userId,
-                sessionUuid = sessionUuid
-            ) ?: throw InvalidSessionHttpException("Unknown session")
-        ).also { cache.put("$userId-$sessionUuid", it) }
+        val session = sessionsRepository.getSession(
+            userId = userId,
+            sessionUuid = sessionUuid
+        )?: throw InvalidSessionHttpException("Unknown session")
+
+        if (!session.active) throw InactiveSessionHttpException("This session is no more valid")
+
+        cache.put("$userId-$sessionUuid", session)
+        return session
     }
 
     private fun saveSession(session: AuthSession) {
@@ -67,8 +73,8 @@ class AuthServiceImpl(
     }
 
     private fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean = true) {
-        val usersCache = cacheManager.getCache("sessions")
-        usersCache?.evict("$userId-$sessionUuid")
+        val usersCache = cacheManager.getCache("sessions")!!
+        usersCache.evict("$userId-$sessionUuid")
 
         return sessionsRepository.revokeSession(userId = userId, sessionUuid = sessionUuid, soft = soft)
     }
@@ -87,7 +93,7 @@ class AuthServiceImpl(
             accessTokenUuid = accessTokenUuid,
             refreshTokenUuid = refreshTokenUuid,
         ).also {
-            val cache = cacheManager.getCache("sessions")!!
+            val cache = JsonCacheWrapper(cacheManager.getCache("sessions")!!, objectMapper)
             cache.put("${it.userId}-${it.uuid}", it)
         }
     }
@@ -141,7 +147,7 @@ class AuthServiceImpl(
 
         // TODO: Fetch user here to see is it valid and active?
 
-        if (!isSuspiciousActivity(session, currentUserAgent)) {
+        if (isSuspiciousActivity(session, currentUserAgent)) {
             handleSuspiciousActivity(session, currentUserAgent)
             throw SuspiciousActivityDetectedHttpException(message = "Suspicious activity detected")
         }
@@ -218,14 +224,14 @@ class AuthServiceImpl(
             email = email,
             passwordHash = SecurityHelper.hashPassword(passwordRaw)
         ).also {
-            val cache = cacheManager.getCache("users")!!
-            cache.put(it.id, it)
+            val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
+            cache.put(it.id.toString(), it)
         }
     }
 
     override fun getUserById(id: Long): User {
-        val cache = cacheManager.getCache("users")!!
-        val cached = cache.get<User>(id)
+        val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
+        val cached = cache.getAs<User>(id.toString())
         if (cached != null) return cached
 
         val user = usersRepository.getById(id)
@@ -233,8 +239,8 @@ class AuthServiceImpl(
     }
 
     override fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo> {
-        val cache = cacheManager.getCache("usersWithAccess")!!
-        val cached = cache.get<Pair<User, AccessInfo>>(id)
+        val cache = JsonCacheWrapper(cacheManager.getCache("usersWithAccess")!!, objectMapper)
+        val cached = cache.getAs<Pair<User, AccessInfo>>(id.toString())
         if (cached != null) return cached
 
         val result = usersRepository.getByIdWithAccessInfo(id)

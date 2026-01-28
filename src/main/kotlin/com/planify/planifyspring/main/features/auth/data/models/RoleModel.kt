@@ -4,7 +4,8 @@ import com.planify.planifyspring.main.features.auth.domain.entities.Role
 import jakarta.persistence.*
 
 @Entity
-data class RoleModel(
+@Table(name = "roles")
+class RoleModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,

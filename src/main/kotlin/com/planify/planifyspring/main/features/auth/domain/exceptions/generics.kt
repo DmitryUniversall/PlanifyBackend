@@ -65,3 +65,10 @@ class UnknownUserHttpException(
     appCode = 3008,
     message = message
 )
+
+class InactiveSessionHttpException(
+    message: String?
+) : UnauthorizedHttpException(
+    appCode = 3011,
+    message = message
+)

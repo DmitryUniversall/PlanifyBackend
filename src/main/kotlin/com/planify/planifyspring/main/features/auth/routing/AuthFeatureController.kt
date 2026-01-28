@@ -6,6 +6,7 @@ import com.planify.planifyspring.main.common.routing.auth.ProtectedRoute
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
+import com.planify.planifyspring.main.features.auth.routing.dto.AccessInfoDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthSessionPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthTokenPairDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
@@ -19,7 +20,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
-@RestController("/auth")
+@RestController
+@RequestMapping("/auth")
 class AuthFeatureController(
     private val authService: AuthService
 ) {
@@ -39,7 +41,8 @@ class AuthFeatureController(
             LoginResponseDTO(
                 user = UserPrivateDTO.fromEntity(info.user),
                 session = AuthSessionPrivateDTO.fromEntity(info.session),
-                tokens = AuthTokenPairDTO.fromEntity(tokens)
+                tokens = AuthTokenPairDTO.fromEntity(tokens),
+                accessInfo = AccessInfoDTO.fromEntity(info.accessInfo)
             ).asSuccessResponse()
         )
     }
@@ -61,7 +64,8 @@ class AuthFeatureController(
             RegisterResponseDTO(
                 user = UserPrivateDTO.fromEntity(info.user),
                 session = AuthSessionPrivateDTO.fromEntity(info.session),
-                tokens = AuthTokenPairDTO.fromEntity(tokens)
+                tokens = AuthTokenPairDTO.fromEntity(tokens),
+                accessInfo = AccessInfoDTO.fromEntity(info.accessInfo)
             ).asSuccessResponse()
         )
     }

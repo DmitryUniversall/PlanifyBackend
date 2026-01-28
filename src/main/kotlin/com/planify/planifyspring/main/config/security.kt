@@ -18,12 +18,10 @@ class ApplicationSecurityConfig(
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
-            .authorizeHttpRequests {
-                it.requestMatchers("/auth/login").permitAll()
-                it.requestMatchers("/auth/register").permitAll()
-                it.requestMatchers("/auth/refresh").permitAll()
-                it.anyRequest().authenticated()
-            }
+//            .authorizeHttpRequests {
+//                it.requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh").permitAll()
+//                it.anyRequest().authenticated()
+//            }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()
