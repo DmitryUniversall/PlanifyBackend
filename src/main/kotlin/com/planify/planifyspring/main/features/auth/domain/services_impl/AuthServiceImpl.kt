@@ -15,6 +15,7 @@ import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Service
@@ -29,7 +30,7 @@ class AuthServiceImpl(
     private val cacheManager: CacheManager,
     private val objectMapper: ObjectMapper
 ) : AuthService {
-    val logger = LoggerFactory.getLogger(this::class.java)
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     private fun isSuspiciousActivity(session: AuthSession, currentUserAgent: String): Boolean {
         return false  // TODO
