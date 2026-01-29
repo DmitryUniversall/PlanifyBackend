@@ -1,3 +1,3 @@
 username,email,password_hash
-admin,admin@example.com,$2a$12$V9g93nrlx/1yxHrebA0dk.qQVcI6IdLyevhfTfWdFnVD8Cu3sembG
-user,user@example.com,$2a$12$YA1ZVmBdiI4htqvSgaLGHeVWpsEfWgs1s/7fjDjSCzY77cxWFoTnG
+admin,admin@example.com,$2a$12$YA1ZVmBdiI4htqvSgaLGHeVWpsEfWgs1s/7fjDjSCzY77cxWFoTnG
+user,user@example.com,$2a$12$V9g93nrlx/1yxHrebA0dk.qQVcI6IdLyevhfTfWdFnVD8Cu3sembG

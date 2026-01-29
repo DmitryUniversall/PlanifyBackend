@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
-import com.planify.planifyspring.main.common.utils.redis.RedisJsonHelper
 import com.planify.planifyspring.main.common.utils.SecurityHelper
+import com.planify.planifyspring.main.common.utils.redis.RedisJsonHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import org.springframework.stereotype.Repository
@@ -65,9 +65,13 @@ class SessionsRepositoryImpl(
 
     override fun getUserSessions(userId: Long): List<AuthSession> {
         return helper.hgetAllDataClasses(
-            base = getUserSessionsKey(userId),
+            base = "${getUserSessionsKey(userId)}:*",
             clazz = AuthSession::class.java
         )
+    }
+
+    override fun getActiveUserSessions(userId: Long): List<AuthSession> {
+        return getUserSessions(userId).filter { it.active }
     }
 
     override fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean) {

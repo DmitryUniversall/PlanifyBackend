@@ -38,3 +38,12 @@ open class UnauthorizedHttpException(
     appCode = appCode,
     message = message
 )
+
+open class UnexpectedErrorHttpException(
+    message: String?,
+    appCode: Int = 2000
+) : ApplicationHttpException(
+    httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+    appCode = appCode,
+    message = message
+)

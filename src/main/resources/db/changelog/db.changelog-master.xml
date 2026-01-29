@@ -8,8 +8,10 @@
     <include file="/db/changelog/01/authorities.changelog.xml"/>
     <include file="db/changelog/01/roles.changelog.xml"/>
     <include file="db/changelog/01/users.changelog.xml"/>
+    <include file="db/changelog/01/profiles.changelog.xml"/>
 
     <include file="/db/changelog/01/data/authorities-data.xml"/>
     <include file="/db/changelog/01/data/roles-data.xml"/>
     <include file="/db/changelog/01/data/users-data.xml"/>
+    <include file="/db/changelog/01/data/profiles-data.xml"/>
 </databaseChangeLog>

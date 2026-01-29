@@ -37,6 +37,8 @@ class RedisJsonHelper(
     }
 
     fun <T : Any> hgetDataClass(key: String, clazz: Class<T>): T? {
+        logger.debug("Getting key $key")
+
         val raw = stringRedisTemplate.opsForHash<String, String>().entries(key)
         if (raw.isEmpty()) return null
 
@@ -52,18 +54,12 @@ class RedisJsonHelper(
     }
 
     fun <T : Any> hgetAllDataClasses(base: String, clazz: Class<T>): List<T> {
-        val keys = stringRedisTemplate.opsForHash<String, String>().keys(base)
+        val keys = stringRedisTemplate.keys(base)
 
         val result = ArrayList<T>()
         for (key in keys) {
-            val objKey = "$base:$key"
-            val obj = hgetDataClass(objKey, clazz)
-
-            if (obj != null) {
-                result.add(obj)
-            } else {
-                logger.warn("Unable to read `$objKey`, skipping")
-            }
+            val obj = hgetDataClass(key, clazz)
+            result.add(obj!!)
         }
 
         return result

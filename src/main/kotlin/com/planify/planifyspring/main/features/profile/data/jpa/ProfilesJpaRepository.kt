@@ -1,6 +1,7 @@
 package com.planify.planifyspring.main.features.profile.data.jpa
 
 import com.planify.planifyspring.main.features.profile.data.models.ProfileModel
+import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
@@ -12,17 +13,18 @@ interface ProfilesJpaRepository : JpaRepository<ProfileModel, Long> {
     fun findByUserId(userId: Long): ProfileModel?
 
     @Modifying
+    @Transactional
     @Query(
         """
-        UPDATE profiles p
+        UPDATE ProfileModel p
         SET
             p.firstName = COALESCE(:firstName, p.firstName),
             p.lastName = COALESCE(:lastName, p.lastName),
             p.position = COALESCE(:position, p.position),
             p.department = COALESCE(:department, p.department),
             p.profileImageUrl = COALESCE(:profileImageUrl, p.profileImageUrl)
-        WHERE p.id = :id
-    """, nativeQuery = true
+        WHERE p.userId = :userId
+    """
     )
     fun parchProfile(
         @Param("userId") userId: Long?,

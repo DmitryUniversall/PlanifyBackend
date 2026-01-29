@@ -3,12 +3,14 @@ package com.planify.planifyspring.main.features.auth.routing
 import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.exceptions.generics.UnexpectedErrorHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.routing.dto.AccessInfoDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthSessionPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthTokenPairDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
@@ -87,7 +89,7 @@ class AuthFeatureController(
         )
     }
 
-    @GetMapping("/logout")
+    @DeleteMapping("/logout")
     fun logout(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
@@ -95,12 +97,38 @@ class AuthFeatureController(
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @DeleteMapping("/session/{sessionUuid}")
+    @DeleteMapping("/sessions/{sessionUuid}")
     fun revokeSession(
         @PathVariable sessionUuid: String,
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
         authService.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
+        return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @GetMapping("/sessions/active")
+    fun getUserSessions(
+        @AuthenticationPrincipal authContext: AuthContext
+    ): ResponseEntity<ApplicationResponse<GetSessionsResponseDTO>> {
+        val sessions = authService.getActiveUserSessions(authContext.user.id)
+
+        return ResponseEntity.ok(
+            GetSessionsResponseDTO(
+            sessions = sessions.map { AuthSessionPrivateDTO.fromEntity(it) }
+        ).asSuccessResponse())
+    }
+
+    @DeleteMapping("/sessions/active")
+    fun revokeAllSessionsExceptCurrent(
+        @AuthenticationPrincipal authContext: AuthContext
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        val sessions = authService.getActiveUserSessions(authContext.user.id)
+
+        sessions.forEach { // TODO: Optimise it?
+            if (it.uuid == authContext.session.uuid) return@forEach
+            authService.revokeSession(authContext.user.id, it.uuid)
+        }
+
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 }

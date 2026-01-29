@@ -287,4 +287,12 @@ class AuthServiceImpl(
         val result = usersRepository.getByAuthCredentialsWithAccessInfo(email, passwordRaw)
         return result ?: throw NotFoundHttpException("User was not found")
     }
+
+    override fun getUserSessions(userId: Long): List<AuthSession> {
+        return sessionsRepository.getUserSessions(userId)
+    }
+
+    override fun getActiveUserSessions(userId: Long): List<AuthSession> {
+        return sessionsRepository.getActiveUserSessions(userId)
+    }
 }

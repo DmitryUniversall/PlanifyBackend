@@ -14,6 +14,7 @@ interface SessionsRepository {
     fun getSession(userId: Long, sessionUuid: String): AuthSession?
 
     fun getUserSessions(userId: Long): List<AuthSession>
+    fun getActiveUserSessions(userId: Long): List<AuthSession>
 
     fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean = true)
 

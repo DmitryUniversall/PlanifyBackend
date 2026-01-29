@@ -4,6 +4,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
+import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 
 interface AuthService {
     fun authenticate(accessToken: String): AuthContext
@@ -41,4 +42,7 @@ interface AuthService {
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
+
+    fun getUserSessions(userId: Long): List<AuthSession>
+    fun getActiveUserSessions(userId: Long): List<AuthSession>
 }
