@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.features.profiles.routing
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
+import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.GetProfileResponseDTO
@@ -35,13 +36,13 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: PatchProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesService.patchProfile(authContext.user.id) {
-            firstName = body.firstName
-            lastName = body.lastName
-            position = body.position
-            department = body.department
+        profilesService.patchProfile(authContext.user.id, ProfilePatchSchema(
+            firstName = body.firstName,
+            lastName = body.lastName,
+            position = body.position,
+            department = body.department,
             profileImageUrl = body.profileImageUrl
-        }
+        ))
 
         return ResponseEntity.ok(ApplicationResponse.success())
     }
@@ -51,13 +52,13 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: UpdateProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesService.patchProfile(authContext.user.id) {
-            firstName = body.firstName
-            lastName = body.lastName
-            position = body.position
-            department = body.department
+        profilesService.patchProfile(authContext.user.id, ProfilePatchSchema(
+            firstName = body.firstName,
+            lastName = body.lastName,
+            position = body.position,
+            department = body.department,
             profileImageUrl = body.profileImageUrl
-        }
+        ))
 
         return ResponseEntity.ok(ApplicationResponse.success())
     }

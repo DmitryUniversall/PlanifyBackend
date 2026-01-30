@@ -1,7 +1,9 @@
 package com.planify.planifyspring.main.features.meetings.domain.repositories
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
-import java.util.Date
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
+import java.time.Instant
 
 interface MeetingsRepository {
     fun createMeeting(
@@ -9,20 +11,24 @@ interface MeetingsRepository {
         name: String,
         description: String,
         location: String,
-        startsAt: Date,
-        duration: Int,
-        inviteUserIds: List<Long>?
+        startsAt: Instant,
+        duration: Int
     ): Meeting
 
-    fun getUserMeetings(
-        userId: Long,
-        dateStart: Date?,
-        endDate: Date?
-    ): Map<Date, List<Meeting>>
+    fun patchMeeting(
+        meetingId: Long,
+        patch: MeetingPatchSchema
+    )
 
-    fun getUserMeetingsShort(
+    fun getUserDailyMeetingsWithParticipantIds(
         userId: Long,
-        dateStart: Date?,
-        endDate: Date?
-    ): Map<Date, Int>
+        startAt: Instant,
+        endAt: Instant
+    ): Map<Instant, List<MeetingWithParticipantIds>>
+
+    fun getUserDailyMeetingsShort(
+        userId: Long,
+        startAt: Instant,
+        endAt: Instant
+    ): Map<Instant, Int>
 }

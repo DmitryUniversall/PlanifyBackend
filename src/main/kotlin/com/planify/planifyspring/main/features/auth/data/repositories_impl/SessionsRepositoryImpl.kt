@@ -5,6 +5,7 @@ import com.planify.planifyspring.main.common.utils.redis.RedisJsonHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.util.*
 
 @Repository
@@ -44,8 +45,8 @@ class SessionsRepositoryImpl(
             accessTokenUuid = accessTokenUuid,
             refreshTokenUuid = refreshTokenUuid,
             userAgent = userAgent,
-            createdAt = Date(),
-            lastUsedAt = Date(),
+            createdAt = Instant.now(),
+            lastUsedAt = Instant.now(),
             expiresAt = SecurityHelper.calculateSessionExpiresAt()
         )
 

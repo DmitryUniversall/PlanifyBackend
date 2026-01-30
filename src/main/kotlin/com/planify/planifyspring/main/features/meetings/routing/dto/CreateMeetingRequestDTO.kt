@@ -1,12 +1,13 @@
 package com.planify.planifyspring.main.features.meetings.routing.dto
 
-import java.util.Date
+import java.time.Instant
+
 
 data class CreateMeetingRequestDTO(
     val name: String,
     val description: String,
     val location: String,
-    val startsAt: Date,
+    val startsAt: Instant,
     val duration: Int,
     val inviteUserIds: List<Long>?
 )
