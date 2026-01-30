@@ -25,7 +25,7 @@ class SessionsRepositoryImpl(
     }
 
     private fun writeSession(session: AuthSession) {
-        helper.hsetDataClass(
+        helper.hset(
             key = getUserSessionKey(userId = session.userId, sessionUuid = session.uuid),
             value = session
         )
@@ -58,14 +58,14 @@ class SessionsRepositoryImpl(
     override fun getSession(
         userId: Long, sessionUuid: String
     ): AuthSession? {
-        return helper.hgetDataClass(
+        return helper.hget(
             key = getUserSessionKey(userId, sessionUuid),
             clazz = AuthSession::class.java
         )
     }
 
     override fun getUserSessions(userId: Long): List<AuthSession> {
-        return helper.hgetAllDataClasses(
+        return helper.hgetAllSubkeys(
             base = "${getUserSessionsKey(userId)}:*",
             clazz = AuthSession::class.java
         )
@@ -85,7 +85,7 @@ class SessionsRepositoryImpl(
     }
 
     override fun <T> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>) {
-        helper.hset(
+        helper.hsetField(
             key = getUserSessionKey(userId, sessionUuid),
             field = set.first,
             value = set.second

@@ -60,8 +60,8 @@ class MeetingsController(
     @GetMapping("/my")
     fun getMyMeetings(
         @AuthenticationPrincipal authContext: AuthContext,
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") dateStart: Instant?,
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") dateEnd: Instant?
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: Instant?,
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: Instant?
     ): ResponseEntity<ApplicationResponse<GetMyMeetingsResponseDTO>> {
 //        val meetings = meetingsService.getUserMeetings(
 //            userId = authContext.user.id,
@@ -82,8 +82,8 @@ class MeetingsController(
     @GetMapping("/my/short")
     fun getMyMeetingsShort(
         @AuthenticationPrincipal authContext: AuthContext,
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") dateStart: Instant,
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") dateEnd: Instant
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: Instant,
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: Instant
     ): ResponseEntity<ApplicationResponse<GetMyMeetingsShortResponseDTO>> {
         val meetings = meetingsService.getUserDailyMeetingsShort(
             userId = authContext.user.id,
