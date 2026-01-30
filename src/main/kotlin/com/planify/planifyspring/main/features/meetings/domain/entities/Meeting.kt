@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.meetings.domain.entities
 
-import java.util.Date
+import java.time.Instant
 
 data class Meeting(
     val id: Long,
@@ -8,6 +8,6 @@ data class Meeting(
     val name: String,
     val description: String,
     val location: String,
-    val startsAt: Date,
+    val startsAt: Instant,
     val duration: Int
 )

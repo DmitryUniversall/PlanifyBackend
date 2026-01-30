@@ -3,7 +3,7 @@ package com.planify.planifyspring.main.features.profiles.data.repositories_impl
 import com.planify.planifyspring.main.features.profiles.data.jpa.ProfilesJpaRepository
 import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.repositories.ProfilesRepository
-import com.planify.planifyspring.main.features.profiles.domain.utils.ProfilePatch
+import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -14,20 +14,9 @@ class ProfilesRepositoryImpl(
         return profilesJpaRepository.findByUserId(userId)?.toEntity()
     }
 
-    override fun updateProfile(profile: Profile) {
-        profilesJpaRepository.parchProfile(
-            userId = profile.userId,
-            firstName = profile.firstName,
-            lastName = profile.lastName,
-            position = profile.position,
-            department = profile.department,
-            profileImageUrl = profile.profileImageUrl,
-        )
-    }
-
     override fun patchProfile(
         userId: Long,
-        patch: ProfilePatch
+        patch: ProfilePatchSchema
     ) {
         profilesJpaRepository.parchProfile(
             userId = userId,

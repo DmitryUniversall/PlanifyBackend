@@ -1,16 +1,16 @@
 package com.planify.planifyspring.main.features.auth.routing.dto
 
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
-import java.util.*
+import java.time.Instant
 
 data class AuthSessionPrivateDTO(
     val uuid: String,
     val name: String,
     val userId: Long,
     val isActive: Boolean = true,
-    val createdAt: Date,
-    val lastUsedAt: Date,
-    val expiresAt: Date
+    val createdAt: Instant,
+    val lastUsedAt: Instant,
+    val expiresAt: Instant
 ) {
     companion object {
         fun fromEntity(entity: AuthSession): AuthSessionPrivateDTO {

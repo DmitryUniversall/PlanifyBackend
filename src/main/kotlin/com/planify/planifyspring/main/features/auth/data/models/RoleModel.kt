@@ -8,7 +8,7 @@ import jakarta.persistence.*
 class RoleModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    val id: Long? = null,
 
     val name: String,
 

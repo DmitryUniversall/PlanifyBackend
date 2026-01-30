@@ -9,7 +9,7 @@ import jakarta.persistence.*
 class UserModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 2,
+    val id: Long? = null,
 
     @Column(nullable = false, unique = true)
     val username: String,

@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.auth.domain.entities
 
 import java.io.Serializable
-import java.util.*
+import java.time.Instant
 
 
 data class AuthSession(
@@ -12,7 +12,7 @@ data class AuthSession(
     val accessTokenUuid: String,
     val refreshTokenUuid: String,
     val userAgent: String,
-    val createdAt: Date,
-    val lastUsedAt: Date,
-    val expiresAt: Date
+    val createdAt: Instant,
+    val lastUsedAt: Instant,
+    val expiresAt: Instant
 ) : Serializable

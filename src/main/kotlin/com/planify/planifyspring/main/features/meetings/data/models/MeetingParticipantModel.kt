@@ -16,7 +16,7 @@ data class MeetingParticipantId(
 
 @Entity
 @Table(name = "meeting_participants")
-@IdClass(MeetingParticipantModel::class)
+@IdClass(MeetingParticipantId::class)
 open class MeetingParticipantModel(
     @Id
     @Column(nullable = false)

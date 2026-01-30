@@ -6,6 +6,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenTyp
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
 import io.jsonwebtoken.Jwts
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.util.*
 
 @Repository
@@ -15,7 +16,7 @@ class TokensRepositoryImpl : TokensRepository {
             .setSubject(payload.userId.toString())
             .setId(payload.uuid)
             .setIssuedAt(Date())
-            .setExpiration(payload.expiresAt)
+            .setExpiration(Date.from(payload.expiresAt))
             .claim("type", payload.type.code)
             .claim("userId", payload.userId)
             .claim("sessionUuid", payload.sessionUuid)
@@ -35,7 +36,7 @@ class TokensRepositoryImpl : TokensRepository {
             .body
 
         val uuid: String = claims.id
-        val expiresAt: Date = claims.expiration
+        val expiresAt: Instant = claims.expiration.toInstant()
 
         val type: AuthTokenType = AuthTokenType.fromCode(claims["type"] as Int)!!
         val sessionUuid: String = claims["sessionUuid"] as String

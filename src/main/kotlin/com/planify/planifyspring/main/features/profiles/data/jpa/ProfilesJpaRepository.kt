@@ -5,7 +5,6 @@ import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -27,11 +26,11 @@ interface ProfilesJpaRepository : JpaRepository<ProfileModel, Long> {
     """
     )
     fun parchProfile(
-        @Param("userId") userId: Long?,
-        @Param("firstName") firstName: String?,
-        @Param("lastName") lastName: String?,
-        @Param("position") position: String?,
-        @Param("department") department: String?,
-        @Param("profileImageUrl") profileImageUrl: String?
+        userId: Long,
+        firstName: String?,
+        lastName: String?,
+        position: String?,
+        department: String?,
+        profileImageUrl: String?
     )
 }
