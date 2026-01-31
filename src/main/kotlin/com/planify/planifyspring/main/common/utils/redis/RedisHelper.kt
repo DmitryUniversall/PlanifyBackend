@@ -9,7 +9,7 @@ import java.time.Duration
 import kotlin.reflect.full.memberProperties
 
 @Component
-class RedisJsonHelper(
+class RedisHelper(
     private val stringRedisTemplate: StringRedisTemplate,
     private val objectMapper: ObjectMapper
 ) {
@@ -41,8 +41,16 @@ class RedisJsonHelper(
         return objectMapper.convertValue(parsedMap, clazz)
     }
 
-    fun <T> hsetField(key: String, field: String, value: T) {
-        val jsonSting = objectMapper.writeValueAsString(value)
+    private fun <T : Any> convertToString(value: T): String {
+        return objectMapper.writeValueAsString(value)
+    }
+
+    private fun <T : Any> convertFromString(value: String, clazz: Class<T>): T {
+        return objectMapper.readValue(value, clazz)
+    }
+
+    fun <T : Any> hsetField(key: String, field: String, value: T) {
+        val jsonSting = convertToString(value)
         stringRedisTemplate.opsForHash<String, String>().put(key, field, jsonSting)
     }
 
@@ -74,7 +82,7 @@ class RedisJsonHelper(
     }
 
     fun <T : Any> set(key: String, value: T) {
-        stringRedisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(value))
+        stringRedisTemplate.opsForValue().set(key, convertToString(value))
     }
 
     fun <T : Any> get(key: String, clazz: Class<T>): T? {
@@ -126,5 +134,14 @@ class RedisJsonHelper(
                 redis.acknowledge(key, group, record.id)
             }
         }
+    }
+
+    fun <T : Any> addToSet(key: String, value: T) {
+        stringRedisTemplate.opsForSet().add(key, convertToString(value))
+    }
+
+    fun <T : Any> getSet(key: String, clazz: Class<T>): List<T> {
+        val values = stringRedisTemplate.opsForSet().members(key) ?: return emptyList()
+        return values.mapNotNull { value -> convertFromString(value, clazz) }
     }
 }

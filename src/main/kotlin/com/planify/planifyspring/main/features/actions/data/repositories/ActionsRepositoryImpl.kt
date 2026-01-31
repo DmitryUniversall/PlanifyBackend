@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.actions.data.repositories
 
-import com.planify.planifyspring.main.common.utils.redis.RedisJsonHelper
+import com.planify.planifyspring.main.common.utils.redis.RedisHelper
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
 import org.springframework.stereotype.Repository
@@ -8,7 +8,7 @@ import java.util.*
 
 @Repository
 class ActionsRepositoryImpl(
-    val redisHelper: RedisJsonHelper
+    val redisHelper: RedisHelper
 ) : ActionsRepository {
     private final val REDIS_CONSUMER_GROUP_NAME = "actions"
 

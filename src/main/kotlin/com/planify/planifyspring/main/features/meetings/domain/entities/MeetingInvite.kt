@@ -3,8 +3,11 @@ package com.planify.planifyspring.main.features.meetings.domain.entities
 import java.time.Instant
 
 data class MeetingInvite(
-    val fromUserId: Long,
-    val toUserId: Long,
+    val uuid: String,
+    val meetingId: Long,
+    val senderId: Long,
+    val targetUserId: Long,
+    val status: MeetingInviteStatus,
     val createdAt: Instant,
-    val status: MeetingInviteStatus
+    val updatedAt: Instant
 )

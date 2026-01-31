@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.meetings.routing.dto
+package com.planify.planifyspring.main.features.meetings.routing.dto.patch_meeting
 
 import java.time.Instant
 

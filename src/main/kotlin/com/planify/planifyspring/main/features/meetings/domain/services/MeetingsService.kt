@@ -26,7 +26,7 @@ interface MeetingsService {
         userId: Long,
         startAt: Instant,
         endAt: Instant
-    ): Map<Instant, MeetingContext>
+    ): Map<Instant, List<MeetingContext>>
 
     fun getUserDailyMeetingsShort(
         userId: Long,

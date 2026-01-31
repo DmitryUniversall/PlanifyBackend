@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.meetings.routing
+package com.planify.planifyspring.main.features.meetings.routing.dto
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 
