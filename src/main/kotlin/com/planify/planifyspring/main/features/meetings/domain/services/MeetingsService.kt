@@ -48,4 +48,10 @@ interface MeetingsService {
         userId: Long,
         meetingId: Long,
     ): Boolean
+
+    fun rescheduleMeeting(
+        meetingId: Long,
+        rescheduleTo: Instant,
+        requesterId: Long
+    )
 }

@@ -25,12 +25,12 @@ class MeetingInvitesRepositoryImpl(
         return "meetings:$meetingId:invites"
     }
 
-    override fun createInvite(meetingId: Long, senderId: Long, targetUserId: Long): MeetingInvite {
+    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite {
         val invite = MeetingInvite(
             uuid = generateInviteUuid(),
             meetingId = meetingId,
             senderId = senderId,
-            targetUserId = targetUserId,
+            targetId = targetId,
             status = MeetingInviteStatus.PENDING,
             createdAt = Instant.now(),
             updatedAt = Instant.now()
@@ -47,8 +47,11 @@ class MeetingInvitesRepositoryImpl(
 
     override fun updateInvite(inviteUuid: String, patch: MeetingInviteParchSchema) {
         val key = getInviteKey(inviteUuid)
+
         patch.status?.let { redisHelper.hsetField(key, "status", patch.status) }
         patch.statusData?.let { redisHelper.hsetField(key, "statusData", patch.statusData) }
+
+        redisHelper.hsetField(key, "updatedAt", Instant.now())
     }
 
     override fun getMeetingInvites(meetingId: Long): List<MeetingInvite> {

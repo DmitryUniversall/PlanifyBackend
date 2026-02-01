@@ -52,7 +52,7 @@ class MeetingsController(
                 meetingInvitesService.createInvite(
                     meetingId = meeting.id,
                     senderId = authContext.user.id,
-                    targetUserId = it
+                    targetId = it
                 )
             }
         }

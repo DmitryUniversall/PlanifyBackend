@@ -18,7 +18,7 @@ class MeetingInviteDTO(
             uuid = entity.uuid,
             meetingId = entity.meetingId,
             senderId = entity.senderId,
-            targetUserId = entity.targetUserId,
+            targetUserId = entity.targetId,
             status = entity.status,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt

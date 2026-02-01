@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.common.utils.redis
 
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Range
 import org.springframework.data.redis.connection.stream.*
 import org.springframework.data.redis.core.StringRedisTemplate
@@ -91,12 +92,16 @@ class RedisHelper(
 
     fun createStreamGroup(
         key: String,
-        group: String
+        group: String,
+        readOffset: ReadOffset,
+        ignoreBusyGroup: Boolean = true
     ) {
         try {
-            stringRedisTemplate.opsForStream<String, String>().createGroup(key, ReadOffset.latest(), group)
-        } catch (_: Exception) {
-            // group already exists
+            stringRedisTemplate.opsForStream<String, String>().createGroup(key, readOffset, group)
+        } catch (e: Exception) {
+            val message = e.cause?.message ?: e.message
+            if (message?.contains("BUSYGROUP") == true && ignoreBusyGroup) return  // Group already exists
+            throw e
         }
     }
 
@@ -104,16 +109,11 @@ class RedisHelper(
         return stringRedisTemplate.opsForStream<String, String>().add(key, convertToStringsMap(value))
     }
 
-    fun <T : Any> readObjectFromStream(key: String, streamId: String, clazz: Class<T>): T? {
-        val records = stringRedisTemplate.opsForStream<String, String>().range(key, Range.closed(streamId, streamId))
-        val record = records.firstOrNull() ?: return null
-        return convertFromStringsMap(record.value, clazz)
-    }
-
     fun <T : Any> readAsConsumer(
         key: String,
         group: String,
         consumer: String,
+        offset: ReadOffset,
         count: Long,
         timeout: Long,
         clazz: Class<T>
@@ -126,7 +126,7 @@ class RedisHelper(
                 .empty()
                 .count(count)
                 .block(Duration.ofSeconds(timeout)),
-            StreamOffset.create(key, ReadOffset.lastConsumed()),
+            StreamOffset.create(key, offset),
         ) ?: return emptyList<T>()
 
         return records.mapNotNull { record -> convertFromStringsMap(record.value, clazz) }

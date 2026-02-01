@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 class ActionsController(
     val actionsService: ActionsService
 ) {
-    @GetMapping("/incoming")
+    @GetMapping("/my/incoming")
     fun getIncomingActions(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestParam count: Long = 10,

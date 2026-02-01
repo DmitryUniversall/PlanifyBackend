@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.features.actions.data.repositories
 import com.planify.planifyspring.main.common.utils.redis.RedisHelper
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
+import org.springframework.data.redis.connection.stream.ReadOffset
 import org.springframework.stereotype.Repository
 import java.util.*
 
@@ -38,12 +39,13 @@ class ActionsRepositoryImpl(
     ): List<Action> {
         val streamKey = getActionScopeKey(scope)
 
-        redisHelper.createStreamGroup(streamKey, group)
+        redisHelper.createStreamGroup(streamKey, group, ReadOffset.from("0"))
 
         return redisHelper.readAsConsumer(
             key = streamKey,
             group = group,
             consumer = consumer,
+            offset = ReadOffset.lastConsumed(),
             count = count,
             timeout = timeout,
             clazz = Action::class.java

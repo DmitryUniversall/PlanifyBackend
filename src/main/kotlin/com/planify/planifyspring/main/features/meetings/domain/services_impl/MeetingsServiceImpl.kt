@@ -53,6 +53,17 @@ class MeetingsServiceImpl(
         return meetingsRepository.isUserParticipant(userId, meetingId)
     }
 
+    @Transactional
+    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant, requesterId: Long) {
+        patchMeeting(
+            meetingId = meetingId,
+            updaterId = requesterId,
+            patch = MeetingPatchSchema(
+                startsAt = rescheduleTo
+            )
+        )
+    }
+
     override fun getMeetingById(
         meetingId: Long,
         requesterId: Long

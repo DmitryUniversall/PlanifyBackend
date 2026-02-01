@@ -13,12 +13,12 @@ class ActionsServiceImpl(
         return "users:$userId"
     }
 
-    private fun getUserActionsGroup(userId: Long): String {
-        return "group-user-$userId"
+    private fun getUserActionsGroup(userId: Long, sessionUuid: String): String {
+        return "group-user-$userId-$sessionUuid"
     }
 
-    private fun getUserActionsConsumer(userId: Long, sessionUuid: String): String {
-        return "consumer-user-$userId-$sessionUuid"
+    private fun getUserActionsConsumer(userId: Long): String {
+        return "consumer-user-$userId"
     }
 
     override fun createAction(scope: String, type: String, data: Any): Action {
@@ -45,8 +45,8 @@ class ActionsServiceImpl(
     ): List<Action> {
         return actionsRepository.getIncomingActions(
             scope = getUserActionsScope(userId = userId),
-            group = getUserActionsGroup(userId = userId),
-            consumer = getUserActionsConsumer(userId = userId, sessionUuid = sessionUuid),
+            group = getUserActionsGroup(userId = userId, sessionUuid = sessionUuid),
+            consumer = getUserActionsConsumer(userId = userId),
             count = count,
             timeout = timeout
         )

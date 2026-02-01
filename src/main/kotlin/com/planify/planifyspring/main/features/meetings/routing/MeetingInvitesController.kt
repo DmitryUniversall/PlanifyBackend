@@ -8,7 +8,8 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_invite.GetInviteResponseDTO
-import com.planify.planifyspring.main.features.meetings.routing.dto.request_reschedule.RequestRescheduleRequestDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_request.RescheduleRequestDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_response.RescheduleAnswerRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.send_invite.SendInviteRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.send_invite.SendInviteResponseDTO
 import org.springframework.http.ResponseEntity
@@ -28,7 +29,7 @@ class MeetingInvitesController(
         val invite = meetingInviteService.createInvite(
             meetingId = body.meetingId,
             senderId = authContext.user.id,
-            targetUserId = body.targetUserId
+            targetId = body.targetUserId
         )
 
         return ResponseEntity.ok(
@@ -81,16 +82,32 @@ class MeetingInvitesController(
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @PostMapping("/{inviteUuid}/request/reschedule")
+    @PostMapping("/{inviteUuid}/reschedule/request")
     fun requestRescheduleInvite(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable inviteUuid: String,
-        @RequestBody body: RequestRescheduleRequestDTO
+        @RequestBody body: RescheduleRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
         meetingInviteService.requestRescheduleInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id,
             rescheduleTo = body.rescheduleTo.asUTCInstant()
+        )
+
+        return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @PostMapping("/{inviteUuid}/reschedule/response")
+    fun responseRescheduleInvite(
+        @AuthenticationPrincipal authContext: AuthContext,
+        @PathVariable inviteUuid: String,
+        @RequestBody body: RescheduleAnswerRequestDTO
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+
+        meetingInviteService.responseRescheduleInvite(
+            inviteUuid = inviteUuid,
+            requesterId = authContext.user.id,
+            shouldReschedule = body.shouldReschedule
         )
 
         return ResponseEntity.ok(ApplicationResponse.success())
