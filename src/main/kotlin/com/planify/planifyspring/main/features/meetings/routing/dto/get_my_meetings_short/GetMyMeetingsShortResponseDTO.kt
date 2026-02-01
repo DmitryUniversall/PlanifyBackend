@@ -3,5 +3,5 @@ package com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meet
 import java.time.Instant
 
 data class GetMyMeetingsShortResponseDTO(
-    val meetings: Map<Instant, Int>
+    val meetings: Map<Instant, Long>
 )

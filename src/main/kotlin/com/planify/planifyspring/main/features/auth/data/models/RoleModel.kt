@@ -25,7 +25,7 @@ class RoleModel(
 ) {
     fun toEntity(): Role {
         return Role(
-            id = id,
+            id = id!!,
             name = name
         )
     }

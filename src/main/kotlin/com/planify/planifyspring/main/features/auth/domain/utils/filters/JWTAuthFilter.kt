@@ -22,7 +22,6 @@ class JWTAuthFilter(
         val header = request.getHeader("Authorization")
 
         if (header == null) {
-            LoggerFactory.getLogger(this::class.java).info("AAAAAAAAAAAAAAA")
             filterChain.doFilter(request, response)
             return
         }

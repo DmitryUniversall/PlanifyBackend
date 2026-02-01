@@ -1,2 +1,2 @@
-owner_id, name, description, location, starts_at, duration
-1,Meeting1,Meeting1 description,Room1,2026-01-29T14:00:00, 1
+owner_id,name,description,location,starts_at,duration
+1,Meeting1,Meeting1 description,Room1,2026-01-29T14:00:00,1

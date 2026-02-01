@@ -84,7 +84,7 @@ class SessionsRepositoryImpl(
         }
     }
 
-    override fun <T> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>) {
+    override fun <T: Any> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>) {
         helper.hsetField(
             key = getUserSessionKey(userId, sessionUuid),
             field = set.first,

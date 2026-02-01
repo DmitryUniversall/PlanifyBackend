@@ -1,9 +1,9 @@
 package com.planify.planifyspring.main.features.meetings.data.records
 
-import java.time.Instant
+import java.time.LocalDate
 
 
 data class DayMeetingsCountRecord(
-    val date: Instant,
-    val count: Int
+    val date: LocalDate,
+    val count: Long
 )

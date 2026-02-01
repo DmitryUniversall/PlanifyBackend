@@ -27,7 +27,15 @@ open class MeetingModel(
     val description: String,
 
     @Column(nullable = true)
-    val location: String
+    val location: String,
+
+    @OneToMany(
+        mappedBy = "meeting",
+        fetch = FetchType.LAZY,
+        cascade = [],
+        orphanRemoval = false
+    )
+    val participants: MutableSet<MeetingParticipantModel> = mutableSetOf()
 ) {
     fun toEntity(): Meeting = Meeting(
         id = id!!,

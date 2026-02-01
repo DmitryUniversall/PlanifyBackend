@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.meetings.domain.services
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingContext
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import java.time.Instant
 
@@ -15,6 +16,11 @@ interface MeetingsService {
         duration: Int,
         inviteUserIds: List<Long>?
     ): Meeting
+
+    fun getMeetingById(
+        meetingId: Long,
+        requesterId: Long
+    ): Meeting?
 
     fun patchMeeting(
         meetingId: Long,
@@ -32,5 +38,10 @@ interface MeetingsService {
         userId: Long,
         startAt: Instant,
         endAt: Instant
-    ): Map<Instant, Int>
+    ): Map<Instant, Long>
+
+    fun createMeetingParticipant(
+        meetingId: Long,
+        userId: Long
+    ): MeetingParticipant
 }

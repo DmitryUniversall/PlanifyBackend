@@ -49,7 +49,7 @@ class UserModel(
 
     fun toEntity(): User {
         return User(
-            id = id,
+            id = id!!,
             username = username,
             email = email,
             passwordHash = passwordHash

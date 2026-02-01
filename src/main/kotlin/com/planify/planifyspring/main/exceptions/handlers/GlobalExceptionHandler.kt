@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
@@ -95,6 +96,20 @@ class GlobalExceptionHandler {  // TODO: Split this into different handlers
             status = HttpStatus.NOT_FOUND,
             appCode = 2008,
             message = "Route does not exists"
+        )
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleMissingServletRequestParameterException(
+        e: MissingServletRequestParameterException,
+        request: WebRequest
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+
+        return buildErrorResponse(
+            error = e,
+            status = HttpStatus.BAD_REQUEST,
+            appCode = 2005,
+            message = "Required request parameter '${e.parameterName}' is not present"
         )
     }
 

@@ -1,8 +1,11 @@
 package com.planify.planifyspring.main.features.meetings.routing
 
+import com.planify.planifyspring.core.utils.atEndOfDayInstant
 import com.planify.planifyspring.core.utils.atStartOfDay
+import com.planify.planifyspring.core.utils.atStartOfDayInstant
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
@@ -10,6 +13,7 @@ import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingConte
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingResponseDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting.GetMeetingResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings.GetMyMeetingsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings_short.GetMyMeetingsShortResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.patch_meeting.PatchMeetingRequestDTO
@@ -18,6 +22,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.time.Instant
+import java.time.LocalDate
 
 @RestController
 @RequestMapping("/meetings")
@@ -46,12 +51,30 @@ class MeetingsController(
         )
     }
 
+    @GetMapping("/{meetingId}")
+    fun getMeeting(
+        @AuthenticationPrincipal authContext: AuthContext,
+        @PathVariable meetingId: Long,
+    ): ResponseEntity<ApplicationResponse<GetMeetingResponseDTO>> {
+        val meeting = meetingsService.getMeetingById(
+            meetingId = meetingId,
+            requesterId = authContext.user.id
+        ) ?: throw NotFoundHttpException("Meeting was not found")
+
+        return ResponseEntity.ok(
+            GetMeetingResponseDTO(
+
+                meeting = MeetingDTO.fromEntity(meeting)
+            ).asSuccessResponse()
+        )
+    }
+
     @PatchMapping("/{meetingId}")
     fun patchMeeting(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable meetingId: Long,
         @RequestBody body: PatchMeetingRequestDTO,
-    ) {
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
         meetingsService.patchMeeting(
             meetingId = meetingId,
             updaterId = authContext.user.id,
@@ -63,18 +86,20 @@ class MeetingsController(
                 duration = body.duration,
             )
         )
+
+        return ResponseEntity.ok(ApplicationResponse.success())
     }
 
     @GetMapping("/my")
     fun getMyMeetings(
         @AuthenticationPrincipal authContext: AuthContext,
-        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: Instant,
-        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: Instant
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: LocalDate,
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: LocalDate
     ): ResponseEntity<ApplicationResponse<GetMyMeetingsResponseDTO>> {
         val meetings = meetingsService.getUserDailyMeetingsWithContext(
             userId = authContext.user.id,
-            startAt = dateStart,
-            endAt = dateEnd
+            startAt = dateStart.atStartOfDayInstant(),
+            endAt = dateEnd.atEndOfDayInstant()
         )
 
         return ResponseEntity.ok(
@@ -87,13 +112,13 @@ class MeetingsController(
     @GetMapping("/my/short")
     fun getMyMeetingsShort(
         @AuthenticationPrincipal authContext: AuthContext,
-        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: Instant,
-        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: Instant
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: LocalDate,
+        @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: LocalDate
     ): ResponseEntity<ApplicationResponse<GetMyMeetingsShortResponseDTO>> {
         val meetings = meetingsService.getUserDailyMeetingsShort(
             userId = authContext.user.id,
-            startAt = dateStart.atStartOfDay(),
-            endAt = dateEnd.atStartOfDay()
+            startAt = dateStart.atStartOfDayInstant(),
+            endAt = dateEnd.atEndOfDayInstant()
         )
 
         return ResponseEntity.ok(

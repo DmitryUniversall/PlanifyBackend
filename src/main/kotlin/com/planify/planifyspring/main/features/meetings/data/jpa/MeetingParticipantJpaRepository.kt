@@ -1,46 +1,49 @@
 package com.planify.planifyspring.main.features.meetings.data.jpa
 
 import com.planify.planifyspring.main.features.meetings.data.models.MeetingParticipantModel
-import com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord
 import com.planify.planifyspring.main.features.meetings.data.records.DayMeetingsCountRecord
+import com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.time.Instant
 
 interface MeetingParticipantJpaRepository : JpaRepository<MeetingParticipantModel, Long> {
-    @Query(
+    @Query(  // TODO: Should i use JPQL here?
         """
-            SELECT 
-                m as meeting,
-                mp.user_id as participantId
-            FROM
-                meeting_participants mp
-            JOIN 
-                meetings m ON m.id = mp.meeting_id
-            WHERE 
-                mp.meeting_id IN (
-                    SELECT meeting_id
-                    FROM meeting_participants
-                    WHERE user_id = :userId
-                )
-                AND m.starts_at BETWEEN :startAt AND :endAt
-            ORDER BY
-                m.starts_at, m.id
-        """, nativeQuery = true
+            SELECT new com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord(
+                m,
+                mp.userId
+            )
+            FROM MeetingModel m
+            JOIN m.participants mp
+            WHERE m.id IN (
+                SELECT mp2.meeting.id
+                FROM MeetingParticipantModel mp2
+                WHERE mp2.userId = :userId
+            )
+            AND m.startsAt BETWEEN :startAt AND :endAt
+            ORDER BY m.startsAt, m.id
+        """
     )
     fun getUserDailyMeetingsWithParticipantIds(userId: Long, startAt: Instant, endAt: Instant): List<MeetingParticipantIdRecord>
 
     @Query(
         """
-            SELECT
-                DATE(m.starts_at) as date,
-                COUNT(*) as count
-            FROM meeting_participants mp 
-            JOIN meetings m on mp.meeting_id = m.id
-            WHERE mp.user_id = :userId AND m.starts_at BETWEEN :startAt AND :endAt
-            GROUP BY DATE(m.starts_at)
-            ORDER BY DATE(m.starts_at)
-        """, nativeQuery = true
+            SELECT new com.planify.planifyspring.main.features.meetings.data.records.DayMeetingsCountRecord(
+                CAST(m.startsAt AS java.time.LocalDate), 
+                COUNT(mp)
+            )
+            FROM MeetingParticipantModel mp
+            JOIN mp.meeting m
+            WHERE mp.userId = :userId
+                AND m.startsAt BETWEEN :startAt AND :endAt
+            GROUP BY CAST(m.startsAt AS java.time.LocalDate)
+            ORDER BY CAST(m.startsAt AS java.time.LocalDate)
+        """
     )
-    fun getUserDailyMeetingsCount(userId: Long, startAt: Instant, endAt: Instant): List<DayMeetingsCountRecord>
+    fun getUserDailyMeetingsCount(
+        userId: Long,
+        startAt: Instant,
+        endAt: Instant
+    ): List<DayMeetingsCountRecord>
 }

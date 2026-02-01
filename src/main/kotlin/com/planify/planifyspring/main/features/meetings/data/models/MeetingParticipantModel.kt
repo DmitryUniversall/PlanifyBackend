@@ -1,28 +1,39 @@
 package com.planify.planifyspring.main.features.meetings.data.models
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.IdClass
-import jakarta.persistence.Table
-import java.io.Serializable
-
-
-data class MeetingParticipantId(
-    val meetingId: Long,
-    val userId: Long
-) : Serializable
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
+import jakarta.persistence.*
 
 
 @Entity
-@Table(name = "meeting_participants")
-@IdClass(MeetingParticipantId::class)
+@Table(
+    name = "meeting_participants",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_meeting_participant",
+            columnNames = ["meeting_id", "user_id"]
+        )
+    ],
+    indexes = [
+        Index(name = "idx_meeting_participants_meeting_id", columnList = "meeting_id"),
+        Index(name = "idx_meeting_participants_user_id", columnList = "user_id")
+    ]
+)
 open class MeetingParticipantModel(
     @Id
-    @Column(nullable = false)
-    val userId: Long,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long? = null,
 
-    @Id
-    @Column(nullable = false)
-    val meetingId: Long
-)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "meeting_id", nullable = false)
+    val meeting: MeetingModel,
+
+    @Column(name = "user_id", nullable = false)
+    val userId: Long
+) {
+    fun toEntity(): MeetingParticipant {
+        return MeetingParticipant(
+            userId = userId,
+            meetingId = this.meeting.id!!,
+        )
+    }
+}

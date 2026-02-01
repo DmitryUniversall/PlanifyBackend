@@ -10,10 +10,12 @@
     <include file="db/changelog/01/users.changelog.xml"/>
     <include file="db/changelog/01/profiles.changelog.xml"/>
     <include file="db/changelog/01/meetings.changelog.xml"/>
+    <include file="db/changelog/01/meeting_participants.changelog.xml"/>
 
     <include file="/db/changelog/01/data/authorities-data.xml"/>
     <include file="/db/changelog/01/data/roles-data.xml"/>
     <include file="/db/changelog/01/data/users-data.xml"/>
     <include file="/db/changelog/01/data/profiles-data.xml"/>
     <include file="/db/changelog/01/data/meetings-data.xml"/>
+    <include file="db/changelog/01/data/meeting_participants-data.xml"/>
 </databaseChangeLog>

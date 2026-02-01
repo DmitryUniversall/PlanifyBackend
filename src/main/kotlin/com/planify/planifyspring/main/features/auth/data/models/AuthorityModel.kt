@@ -20,7 +20,7 @@ class AuthorityModel(
 ) {
     fun toEntity(): Authority {
         return Authority(
-            id = id,
+            id = id!!,
             name = name
         )
     }

@@ -2,12 +2,14 @@ package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingContext
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingInvitesRepository
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingsRepository
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 @Service
@@ -34,6 +36,11 @@ class MeetingsServiceImpl(
             duration = duration
         )
 
+        createMeetingParticipant(
+            meetingId = meeting.id,
+            userId = ownerId
+        )
+
         if (!inviteUserIds.isNullOrEmpty()) {
             for (userId in inviteUserIds) {
                 meetingInvitesRepository.createInvite(
@@ -47,6 +54,24 @@ class MeetingsServiceImpl(
         return meeting
     }
 
+    override fun createMeetingParticipant(
+        meetingId: Long,
+        userId: Long
+    ): MeetingParticipant {
+        return meetingsRepository.createMeetingParticipant(
+            meetingId = meetingId,
+            userId = userId
+        )
+    }
+
+    override fun getMeetingById(
+        meetingId: Long,
+        requesterId: Long
+    ): Meeting? {
+        return meetingsRepository.getMeetingById(meetingId)  // TODO: Check if requester is meeting participant
+    }
+
+    @Transactional
     override fun patchMeeting(  // TODO: Check if updated is owner
         meetingId: Long,
         updaterId: Long,
@@ -62,18 +87,22 @@ class MeetingsServiceImpl(
     ): Map<Instant, List<MeetingContext>> {
         val meetings = meetingsRepository.getUserDailyMeetingsWithParticipantIds(userId, startAt, endAt)
 
-        return meetings.mapValues { (_, meetings) -> meetings.map { meetingInfo -> MeetingContext(
-            meeting = meetingInfo.meeting,
-            participants = meetingInfo.participantIds.map { profilesService.getProfileById(it) },  // TODO: Optimise it via db request
-            invites = meetingInvitesRepository.getMeetingInvites(meetingInfo.meeting.id)
-        ) } }
+        return meetings.mapValues { (_, meetings) ->
+            meetings.map { meetingInfo ->
+                MeetingContext(
+                    meeting = meetingInfo.meeting,
+                    participants = meetingInfo.participantIds.map { profilesService.getProfileById(it) },  // TODO: Optimise it via db request
+                    invites = meetingInvitesRepository.getMeetingInvites(meetingInfo.meeting.id)
+                )
+            }
+        }
     }
 
     override fun getUserDailyMeetingsShort(
         userId: Long,
         startAt: Instant,
         endAt: Instant
-    ): Map<Instant, Int> {
+    ): Map<Instant, Long> {
         return meetingsRepository.getUserDailyMeetingsShort(userId, startAt, endAt)
     }
 }

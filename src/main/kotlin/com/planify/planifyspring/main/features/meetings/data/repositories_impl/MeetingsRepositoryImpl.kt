@@ -1,20 +1,26 @@
 package com.planify.planifyspring.main.features.meetings.data.repositories_impl
 
 import com.planify.planifyspring.core.utils.atStartOfDay
+import com.planify.planifyspring.core.utils.atStartOfDayInstant
 import com.planify.planifyspring.main.features.meetings.data.jpa.MeetingJpaRepository
 import com.planify.planifyspring.main.features.meetings.data.jpa.MeetingParticipantJpaRepository
 import com.planify.planifyspring.main.features.meetings.data.models.MeetingModel
+import com.planify.planifyspring.main.features.meetings.data.models.MeetingParticipantModel
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingsRepository
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
+import jakarta.persistence.EntityManager
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import java.time.Instant
 
 @Repository
 class MeetingsRepositoryImpl(
     val meetingsJpaRepository: MeetingJpaRepository,
-    val meetingParticipantJpaRepository: MeetingParticipantJpaRepository
+    val meetingParticipantJpaRepository: MeetingParticipantJpaRepository,
+    val entityManager: EntityManager
 ) : MeetingsRepository {
     override fun createMeeting(
         ownerId: Long,
@@ -35,6 +41,10 @@ class MeetingsRepositoryImpl(
 
         meetingsJpaRepository.save(model)
         return model.toEntity()
+    }
+
+    override fun getMeetingById(meetingId: Long): Meeting? {
+        return meetingsJpaRepository.findByIdOrNull(meetingId)?.toEntity()
     }
 
     override fun patchMeeting(meetingId: Long, patch: MeetingPatchSchema) {
@@ -72,8 +82,21 @@ class MeetingsRepositoryImpl(
         userId: Long,
         startAt: Instant,
         endAt: Instant
-    ): Map<Instant, Int> {
+    ): Map<Instant, Long> {
         val records = meetingParticipantJpaRepository.getUserDailyMeetingsCount(userId, startAt, endAt)
-        return records.associate { it.date to it.count }
+        return records.associate { it.date.atStartOfDayInstant() to it.count }
+    }
+
+    override fun createMeetingParticipant(meetingId: Long, userId: Long): MeetingParticipant {
+        val meetingRef = entityManager.getReference(MeetingModel::class.java, meetingId)
+
+        val model = MeetingParticipantModel(
+            meeting = meetingRef,
+            userId = userId
+        )
+
+        meetingParticipantJpaRepository.save(model)
+
+        return model.toEntity()
     }
 }

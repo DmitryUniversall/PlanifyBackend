@@ -18,6 +18,6 @@ interface SessionsRepository {
 
     fun revokeSession(userId: Long, sessionUuid: String, soft: Boolean = true)
 
-    fun <T> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>)
+    fun <T: Any> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>)
     fun updateSession(updatedSession: AuthSession)
 }
