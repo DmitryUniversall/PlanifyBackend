@@ -1,0 +1,18 @@
+package com.planify.planifyspring.main.features.meetings.domain.services
+
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
+import java.time.Instant
+
+interface MeetingInvitesService {
+    fun createInvite(meetingId: Long, senderId: Long, targetUserId: Long): MeetingInvite
+
+    fun getInvite(inviteUuid: String, requesterId: Long): MeetingInvite?
+
+    fun getMeetingInvites(meetingId: Long, requesterId: Long): List<MeetingInvite>
+
+    fun acceptInvite(inviteUuid: String, requesterId: Long)
+
+    fun rejectInvite(inviteUuid: String, requesterId: Long)
+
+    fun requestRescheduleInvite(inviteUuid: String, rescheduleTo: Instant, requesterId: Long)
+}

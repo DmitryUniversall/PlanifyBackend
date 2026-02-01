@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus
 
 private val objectMapper = jacksonObjectMapper()
 
-fun <T> T.asSuccessResponse(
+fun <T> T.asSuccessApplicationResponse(
     message: String = "Success",
     statusCode: Int = 1000
 ): ApplicationResponse<T> = ApplicationResponse(

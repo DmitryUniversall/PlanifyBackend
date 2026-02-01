@@ -20,3 +20,7 @@ fun LocalDate.atEndOfDayInstant(): Instant =
     this.atTime(LocalTime.MAX)
         .atZone(ZoneOffset.UTC)
         .toInstant()
+
+
+fun LocalDateTime.asUTCInstant(): Instant =
+    this.atZone(ZoneOffset.UTC).toInstant()

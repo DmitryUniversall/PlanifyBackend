@@ -41,17 +41,18 @@ class MeetingInvitesRepositoryImpl(
         return invite
     }
 
-    override fun getMeetingInvite(uuid: String): MeetingInvite? {
+    override fun getInvite(uuid: String): MeetingInvite? {
         return redisHelper.hget(getInviteKey(uuid), MeetingInvite::class.java)
     }
 
     override fun updateInvite(inviteUuid: String, patch: MeetingInviteParchSchema) {
         val key = getInviteKey(inviteUuid)
-        redisHelper.hsetField(key, "status", patch.status)
+        patch.status?.let { redisHelper.hsetField(key, "status", patch.status) }
+        patch.statusData?.let { redisHelper.hsetField(key, "statusData", patch.statusData) }
     }
 
     override fun getMeetingInvites(meetingId: Long): List<MeetingInvite> {
         val ids = redisHelper.getSet(getMeetingInvitesKey(meetingId), String::class.java)
-        return ids.map { getMeetingInvite(it)!! }
+        return ids.map { getInvite(it)!! }
     }
 }

@@ -47,3 +47,12 @@ open class UnexpectedErrorHttpException(
     appCode = appCode,
     message = message
 )
+
+open class ForbiddenHttpException(
+    message: String?,
+    appCode: Int = 2006
+) : ApplicationHttpException(
+    httpStatus = HttpStatus.FORBIDDEN,
+    appCode = appCode,
+    message = message
+)

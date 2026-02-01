@@ -4,5 +4,5 @@ import com.planify.planifyspring.main.features.actions.routing.ActionDTO
 
 
 data class GetIncomingActionsResponseDTO(
-    val actions: List<ActionDTO<out Any>>
+    val actions: List<ActionDTO>
 )

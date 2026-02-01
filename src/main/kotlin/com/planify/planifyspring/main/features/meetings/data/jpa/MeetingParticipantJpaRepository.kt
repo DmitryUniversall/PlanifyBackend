@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query
 import java.time.Instant
 
 interface MeetingParticipantJpaRepository : JpaRepository<MeetingParticipantModel, Long> {
+    fun existsByUserIdAndMeeting_Id(userId: Long, meetingId: Long): Boolean
+
     @Query(  // TODO: Should i use JPQL here?
         """
             SELECT new com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord(

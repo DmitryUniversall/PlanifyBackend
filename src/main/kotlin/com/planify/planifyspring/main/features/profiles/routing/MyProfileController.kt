@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.profiles.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
@@ -27,7 +27,7 @@ class MyProfileController(
         return ResponseEntity.ok(
             GetProfileResponseDTO(
                 profile = ProfileDTO.fromEntity(profile)
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 

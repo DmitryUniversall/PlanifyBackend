@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.auth.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.me.GetMeResponseDTO
@@ -21,7 +21,7 @@ class UsersFeatureController {
         return ResponseEntity.ok(
             GetMeResponseDTO(
                 user = UserPrivateDTO.fromEntity(entity = authContext.user)
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 }

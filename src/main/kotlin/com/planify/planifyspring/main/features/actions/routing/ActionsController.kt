@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.actions.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.actions.routing.dto.GetIncomingActionsResponseDTO
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
@@ -24,12 +24,17 @@ class ActionsController(
         @RequestParam count: Long = 10,
         @RequestParam timeout: Long = 30,
     ): ResponseEntity<ApplicationResponse<GetIncomingActionsResponseDTO>> {
-        val actions = actionsService.getUserIncomingActions(authContext.user.id, count, timeout)
+        val actions = actionsService.getUserIncomingActions(
+            userId = authContext.user.id,
+            sessionUuid = authContext.session.uuid,
+            count = count,
+            timeout = timeout
+        )
 
         return ResponseEntity.ok(
             GetIncomingActionsResponseDTO(
                 actions = actions.map { ActionDTO.fromEntity(it) }
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 }

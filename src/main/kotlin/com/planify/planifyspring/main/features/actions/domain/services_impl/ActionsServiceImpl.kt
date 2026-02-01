@@ -9,15 +9,46 @@ import org.springframework.stereotype.Service
 class ActionsServiceImpl(
     val actionsRepository: ActionsRepository
 ) : ActionsService {
-    override fun <T : Any> createAction(type: String, targetUserId: Long, data: T): Action<T> {
-        return actionsRepository.createAction(type, targetUserId, data)
+    private fun getUserActionsScope(userId: Long): String {
+        return "users:$userId"
     }
 
-    override fun getActionByUuid(uuid: String): Action<out Any>? {
-        return actionsRepository.getActionByUuid(uuid)
+    private fun getUserActionsGroup(userId: Long): String {
+        return "group-user-$userId"
     }
 
-    override fun getUserIncomingActions(userId: Long, count: Long, timeout: Long): List<Action<out Any>> {
-        return actionsRepository.getUserIncomingActions(userId, count, timeout)
+    private fun getUserActionsConsumer(userId: Long, sessionUuid: String): String {
+        return "consumer-user-$userId-$sessionUuid"
+    }
+
+    override fun createAction(scope: String, type: String, data: Any): Action {
+        return actionsRepository.createAction(
+            scope = scope,
+            type = type,
+            data = data
+        )
+    }
+
+    override fun createUserAction(userId: Long, type: String, data: Any): Action {
+        return actionsRepository.createAction(
+            scope = getUserActionsScope(userId = userId),
+            type = type,
+            data = data
+        )
+    }
+
+    override fun getUserIncomingActions(
+        userId: Long,
+        sessionUuid: String,
+        count: Long,
+        timeout: Long
+    ): List<Action> {
+        return actionsRepository.getIncomingActions(
+            scope = getUserActionsScope(userId = userId),
+            group = getUserActionsGroup(userId = userId),
+            consumer = getUserActionsConsumer(userId = userId, sessionUuid = sessionUuid),
+            count = count,
+            timeout = timeout
+        )
     }
 }

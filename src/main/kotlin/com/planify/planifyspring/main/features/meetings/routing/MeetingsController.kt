@@ -1,33 +1,37 @@
 package com.planify.planifyspring.main.features.meetings.routing
 
 import com.planify.planifyspring.core.utils.atEndOfDayInstant
-import com.planify.planifyspring.core.utils.atStartOfDay
 import com.planify.planifyspring.core.utils.atStartOfDayInstant
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
-import com.planify.planifyspring.main.common.utils.asSuccessResponse
+import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
+import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingContextDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting.GetMeetingResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings.GetMyMeetingsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings_short.GetMyMeetingsShortResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.patch_meeting.PatchMeetingRequestDTO
+import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
+import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.time.Instant
 import java.time.LocalDate
 
 @RestController
 @RequestMapping("/meetings")
 class MeetingsController(
-    val meetingsService: MeetingsService
+    val meetingsService: MeetingsService,
+    val meetingInvitesService: MeetingInvitesService,
+    val profileService: ProfilesService
 ) {
     @PostMapping("")
     fun createMeeting(
@@ -40,14 +44,23 @@ class MeetingsController(
             description = body.description,
             location = body.location,
             startsAt = body.startsAt,
-            duration = body.duration,
-            inviteUserIds = body.inviteUserIds
+            duration = body.duration
         )
+
+        body.inviteUserIds?.let { userIds ->
+            userIds.forEach {
+                meetingInvitesService.createInvite(
+                    meetingId = meeting.id,
+                    senderId = authContext.user.id,
+                    targetUserId = it
+                )
+            }
+        }
 
         return ResponseEntity.ok(
             CreateMeetingResponseDTO(
                 meeting = MeetingDTO.fromEntity(meeting)
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 
@@ -65,7 +78,7 @@ class MeetingsController(
             GetMeetingResponseDTO(
 
                 meeting = MeetingDTO.fromEntity(meeting)
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 
@@ -96,7 +109,7 @@ class MeetingsController(
         @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateStart: LocalDate,
         @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") dateEnd: LocalDate
     ): ResponseEntity<ApplicationResponse<GetMyMeetingsResponseDTO>> {
-        val meetings = meetingsService.getUserDailyMeetingsWithContext(
+        val meetings = meetingsService.getUserDailyMeetingsWithParticipantIds(
             userId = authContext.user.id,
             startAt = dateStart.atStartOfDayInstant(),
             endAt = dateEnd.atEndOfDayInstant()
@@ -104,8 +117,26 @@ class MeetingsController(
 
         return ResponseEntity.ok(
             GetMyMeetingsResponseDTO(
-                meetings = meetings.mapValues { (_, value) -> value.map { MeetingContextDTO.fromEntity(it) } }
-            ).asSuccessResponse()
+                meetings = meetings.mapValues { (_, meetings) ->
+                    meetings.map { (meeting, participantIds) ->
+                        val invites = meetingInvitesService.getMeetingInvites(
+                            meetingId = meeting.id,
+                            requesterId = authContext.user.id
+                        ).map { MeetingInviteDTO.fromEntity(it) }
+
+                        val participantProfiles = participantIds.map {
+                            ProfileDTO.fromEntity(profileService.getProfileById(it))  // TODO: Optimise it via db query
+                        }
+
+                        val meeting = MeetingDTO.fromEntity(meeting)
+                        MeetingContextDTO(
+                            participantProfiles = participantProfiles,
+                            invites = invites,
+                            meeting = meeting
+                        )
+                    }
+                }
+            ).asSuccessApplicationResponse()
         )
     }
 
@@ -124,7 +155,7 @@ class MeetingsController(
         return ResponseEntity.ok(
             GetMyMeetingsShortResponseDTO(
                 meetings = meetings
-            ).asSuccessResponse()
+            ).asSuccessApplicationResponse()
         )
     }
 }

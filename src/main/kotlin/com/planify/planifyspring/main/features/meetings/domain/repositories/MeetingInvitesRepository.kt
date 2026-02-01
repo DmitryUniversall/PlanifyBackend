@@ -6,7 +6,7 @@ import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingIn
 interface MeetingInvitesRepository {
     fun createInvite(meetingId: Long, senderId: Long, targetUserId: Long): MeetingInvite
 
-    fun getMeetingInvite(uuid: String): MeetingInvite?
+    fun getInvite(uuid: String): MeetingInvite?
 
     fun updateInvite(inviteUuid: String, patch: MeetingInviteParchSchema)
 

@@ -1,8 +1,8 @@
 package com.planify.planifyspring.main.features.meetings.domain.services
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
-import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingContext
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import java.time.Instant
 
@@ -14,7 +14,6 @@ interface MeetingsService {
         location: String,
         startsAt: Instant,
         duration: Int,
-        inviteUserIds: List<Long>?
     ): Meeting
 
     fun getMeetingById(
@@ -28,11 +27,11 @@ interface MeetingsService {
         patch: MeetingPatchSchema
     )
 
-    fun getUserDailyMeetingsWithContext(
+    fun getUserDailyMeetingsWithParticipantIds(
         userId: Long,
         startAt: Instant,
         endAt: Instant
-    ): Map<Instant, List<MeetingContext>>
+    ): Map<Instant, List<MeetingWithParticipantIds>>
 
     fun getUserDailyMeetingsShort(
         userId: Long,
@@ -44,4 +43,9 @@ interface MeetingsService {
         meetingId: Long,
         userId: Long
     ): MeetingParticipant
+
+    fun isUserParticipant(
+        userId: Long,
+        meetingId: Long,
+    ): Boolean
 }

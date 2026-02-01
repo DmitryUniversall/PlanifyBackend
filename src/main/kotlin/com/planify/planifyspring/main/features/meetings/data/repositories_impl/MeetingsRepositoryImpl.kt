@@ -99,4 +99,8 @@ class MeetingsRepositoryImpl(
 
         return model.toEntity()
     }
+
+    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
+        return meetingParticipantJpaRepository.existsByUserIdAndMeeting_Id(userId, meetingId)
+    }
 }

@@ -129,11 +129,15 @@ class RedisHelper(
             StreamOffset.create(key, ReadOffset.lastConsumed()),
         ) ?: return emptyList<T>()
 
-        return records.mapNotNull { record ->
-            convertFromStringsMap(record.value, clazz).also {
-                redis.acknowledge(key, group, record.id)
-            }
-        }
+        return records.mapNotNull { record -> convertFromStringsMap(record.value, clazz) }
+    }
+
+    fun acknowledge(
+        key: String,
+        group: String,
+        recordId: RecordId,
+    ) {
+        stringRedisTemplate.opsForStream<String, String>().acknowledge(key, group, recordId)
     }
 
     fun <T : Any> addToSet(key: String, value: T) {

@@ -9,5 +9,6 @@ data class MeetingInvite(
     val targetUserId: Long,
     val status: MeetingInviteStatus,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val statusData: Any? = null
 )
