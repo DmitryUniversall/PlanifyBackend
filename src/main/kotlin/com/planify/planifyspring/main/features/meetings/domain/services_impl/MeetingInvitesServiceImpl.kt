@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
+import com.planify.planifyspring.main.common.utils.ObjectMapperHelper
 import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
 import com.planify.planifyspring.main.exceptions.generics.ForbiddenHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
@@ -20,15 +21,21 @@ import java.time.Instant
 class MeetingInvitesServiceImpl(
     val meetingInvitesRepository: MeetingInvitesRepository,
     val meetingService: MeetingsService,
-    val actionsService: ActionsService
+    val actionsService: ActionsService,
+    val objectMapperHelper: ObjectMapperHelper
 ) : MeetingInvitesService {
     override fun createInvite(
         meetingId: Long,
         senderId: Long,
         targetId: Long
     ): MeetingInvite {
+        val invites = getMeetingInvites(meetingId, senderId)
+        if (invites.firstOrNull { it.targetId == targetId } != null) throw BadRequestHttpException("Cannot invite user: target already has an invite to this meeting")
+
         val meeting = meetingService.getMeetingById(meetingId, senderId) ?: throw NotFoundHttpException("Meeting was not found")
         if (senderId != meeting.ownerId) throw ForbiddenHttpException("Cannot invite user: you are not owner of this meeting")
+
+        if (meetingService.isUserParticipant(targetId, meetingId)) throw BadRequestHttpException("Cannot invite user: target already participant of this meeting")
 
         val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId)
 
@@ -93,6 +100,8 @@ class MeetingInvitesServiceImpl(
             )
         )
 
+        meetingService.createMeetingParticipant(invite.meetingId, invite.targetId)
+
         actionsService.createAction(
             scope = "users:${invite.senderId}",
             type = "meetings:invite_status_updated",
@@ -118,6 +127,16 @@ class MeetingInvitesServiceImpl(
                 updatedAt = Instant.now(),
                 oldStatus = invite.status,  // Still contain old status!
                 newStatus = MeetingInviteStatus.ACCEPTED
+            )
+        )
+
+        actionsService.createAction(
+            scope = "meeting:${invite.meetingId}",
+            type = "meetings:new_participant",
+            data = MeetingActionNewParticipantSchema(
+                meetingId = invite.meetingId,
+                newParticipantId = invite.targetId,
+                joinedAt = Instant.now()
             )
         )
     }
@@ -181,7 +200,7 @@ class MeetingInvitesServiceImpl(
             patch = MeetingInviteParchSchema(
                 status = MeetingInviteStatus.RESCHEDULE_REQUESTED,
                 statusData = InviteRescheduleStatusDataScheme(
-                    rescheduleTo = Instant.now()
+                    rescheduleTo = rescheduleTo
                 )
             )
         )
@@ -227,7 +246,8 @@ class MeetingInvitesServiceImpl(
         )
 
         if (shouldReschedule) {
-            val rescheduleTo = (invite.statusData!! as InviteRescheduleStatusDataScheme).rescheduleTo
+            @Suppress("UNCHECKED_CAST")  // TODO: Refactor it
+            val rescheduleTo = objectMapperHelper.convertFromStringsMap(invite.statusData!! as Map<String, String>, InviteRescheduleStatusDataScheme::class.java).rescheduleTo
             meetingService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo, requesterId = requesterId)
         }
 

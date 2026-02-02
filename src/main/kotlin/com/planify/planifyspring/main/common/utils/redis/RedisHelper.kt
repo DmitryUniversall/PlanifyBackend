@@ -1,57 +1,18 @@
 package com.planify.planifyspring.main.common.utils.redis
 
-import org.slf4j.LoggerFactory
-import org.springframework.data.domain.Range
+import com.planify.planifyspring.main.common.utils.ObjectMapperHelper
 import org.springframework.data.redis.connection.stream.*
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import tools.jackson.databind.ObjectMapper
 import java.time.Duration
-import kotlin.reflect.full.memberProperties
 
 @Component
 class RedisHelper(
     private val stringRedisTemplate: StringRedisTemplate,
-    private val objectMapper: ObjectMapper
+    private val objectMapperHelper: ObjectMapperHelper
 ) {
-    private fun <T : Any> convertToStringsMap(value: T): Map<String, String> {
-        return value::class.memberProperties.associate { prop ->
-            val fieldName = prop.name
-            val fieldValue = prop.getter.call(value)
-
-            val stringValue = when (fieldValue) {
-                null -> "null"
-                is String -> fieldValue
-                is Number, is Boolean -> fieldValue.toString()
-                else -> objectMapper.writeValueAsString(fieldValue)
-            }
-
-            fieldName to stringValue
-        }
-    }
-
-    private fun <T : Any> convertFromStringsMap(value: Map<String, String>, clazz: Class<T>): T {
-        val parsedMap = value.mapValues { (_, v) ->
-            try {
-                objectMapper.readValue(v, Any::class.java)
-            } catch (_: Exception) {
-                v
-            }
-        }
-
-        return objectMapper.convertValue(parsedMap, clazz)
-    }
-
-    private fun <T : Any> convertToString(value: T): String {
-        return objectMapper.writeValueAsString(value)
-    }
-
-    private fun <T : Any> convertFromString(value: String, clazz: Class<T>): T {
-        return objectMapper.readValue(value, clazz)
-    }
-
     fun <T : Any> hsetField(key: String, field: String, value: T) {
-        val jsonSting = convertToString(value)
+        val jsonSting = objectMapperHelper.convertToString(value)
         stringRedisTemplate.opsForHash<String, String>().put(key, field, jsonSting)
     }
 
@@ -60,14 +21,14 @@ class RedisHelper(
     }
 
     fun <T : Any> hset(key: String, value: T) {
-        val hash = convertToStringsMap(value)
+        val hash = objectMapperHelper.convertToStringsMap(value)
         stringRedisTemplate.opsForHash<String, String>().putAll(key, hash)
     }
 
     fun <T : Any> hget(key: String, clazz: Class<T>): T? {
         val raw = stringRedisTemplate.opsForHash<String, String>().entries(key)
         if (raw.isEmpty()) return null
-        return convertFromStringsMap(raw, clazz)
+        return objectMapperHelper.convertFromStringsMap(raw, clazz)
     }
 
     fun <T : Any> hgetAllSubkeys(base: String, clazz: Class<T>): List<T> {
@@ -83,11 +44,12 @@ class RedisHelper(
     }
 
     fun <T : Any> set(key: String, value: T) {
-        stringRedisTemplate.opsForValue().set(key, convertToString(value))
+        stringRedisTemplate.opsForValue().set(key, objectMapperHelper.convertToString(value))
     }
 
     fun <T : Any> get(key: String, clazz: Class<T>): T? {
-        return objectMapper.convertValue(stringRedisTemplate.opsForValue().get(key), clazz)
+        val value = stringRedisTemplate.opsForValue().get(key) ?: return null
+        return objectMapperHelper.convertFromString(value, clazz)
     }
 
     fun createStreamGroup(
@@ -106,7 +68,7 @@ class RedisHelper(
     }
 
     fun <T : Any> addToStream(key: String, value: T): RecordId {
-        return stringRedisTemplate.opsForStream<String, String>().add(key, convertToStringsMap(value))
+        return stringRedisTemplate.opsForStream<String, String>().add(key, objectMapperHelper.convertToStringsMap(value))
     }
 
     fun <T : Any> readAsConsumer(
@@ -129,7 +91,10 @@ class RedisHelper(
             StreamOffset.create(key, offset),
         ) ?: return emptyList<T>()
 
-        return records.mapNotNull { record -> convertFromStringsMap(record.value, clazz) }
+        return records.mapNotNull { record ->
+            objectMapperHelper.convertFromStringsMap(record.value, clazz)
+                .also { acknowledge(key, group, record.id) }
+        }
     }
 
     fun acknowledge(
@@ -141,11 +106,11 @@ class RedisHelper(
     }
 
     fun <T : Any> addToSet(key: String, value: T) {
-        stringRedisTemplate.opsForSet().add(key, convertToString(value))
+        stringRedisTemplate.opsForSet().add(key, objectMapperHelper.convertToString(value))
     }
 
     fun <T : Any> getSet(key: String, clazz: Class<T>): List<T> {
         val values = stringRedisTemplate.opsForSet().members(key) ?: return emptyList()
-        return values.mapNotNull { value -> convertFromString(value, clazz) }
+        return values.mapNotNull { value -> objectMapperHelper.convertFromString(value, clazz) }
     }
 }
