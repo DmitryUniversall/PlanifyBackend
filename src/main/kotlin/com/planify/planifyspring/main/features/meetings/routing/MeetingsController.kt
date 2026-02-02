@@ -18,7 +18,7 @@ import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting.
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings.GetMyMeetingsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings_short.GetMyMeetingsShortResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.patch_meeting.PatchMeetingRequestDTO
-import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
+import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.ResponseEntity
@@ -31,7 +31,7 @@ import java.time.LocalDate
 class MeetingsController(
     val meetingsServiceUseCaseGroup: MeetingsServiceUseCaseGroup,
     val meetingInvitesUseCaseGroup: MeetingInvitesUseCaseGroup,
-    val profileService: ProfilesService
+    val profileService: ProfilesUseCaseGroup
 ) {
     @PostMapping("")
     fun createMeeting(

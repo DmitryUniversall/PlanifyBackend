@@ -17,13 +17,13 @@ class ProfilesServiceImpl(
     private val cacheManager: CacheManager,
     private val objectMapper: ObjectMapper
 ) : ProfilesService {
-    override fun getProfileById(userId: Long): Profile {
+    override fun getProfileById(userId: Long): Profile? {
         val cache = JsonCacheWrapper(cacheManager.getCache("profiles:$userId")!!, objectMapper)
         val cached = cache.getAs<Profile>("profiles:$userId")
         if (cached != null) return cached
 
-        return (profilesRepository.getProfileById(userId) ?: throw NotFoundHttpException("Profile for this user was not found"))
-            .also { profile -> cache.put("profiles:$userId", profile) }
+        return profilesRepository.getProfileById(userId)
+            .also { profile -> profile?.let { cache.put("profiles:$userId", profile) } }
     }
 
     override fun patchProfile(userId: Long, patch: ProfilePatchSchema) {
@@ -37,3 +37,4 @@ class ProfilesServiceImpl(
         }
     }
 }
+
