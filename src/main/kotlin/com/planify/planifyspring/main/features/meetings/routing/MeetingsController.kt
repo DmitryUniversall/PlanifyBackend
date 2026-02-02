@@ -31,7 +31,7 @@ import java.time.LocalDate
 class MeetingsController(
     val meetingsServiceUseCaseGroup: MeetingsServiceUseCaseGroup,
     val meetingInvitesUseCaseGroup: MeetingInvitesUseCaseGroup,
-    val profileService: ProfilesUseCaseGroup
+    val profileUseCaseGroup: ProfilesUseCaseGroup
 ) {
     @PostMapping("")
     fun createMeeting(
@@ -126,7 +126,7 @@ class MeetingsController(
                         ).map { MeetingInviteDTO.fromEntity(it) }
 
                         val participantProfiles = participantIds.map {
-                            ProfileDTO.fromEntity(profileService.getProfileById(it))  // TODO: Optimise it via db query
+                            ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it))  // TODO: Optimise it via db query
                         }
 
                         val meeting = MeetingDTO.fromEntity(meeting)

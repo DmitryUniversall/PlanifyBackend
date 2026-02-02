@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.actions.routing
+package com.planify.planifyspring.main.features.actions.routing.dto
 
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 

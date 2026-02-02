@@ -17,7 +17,7 @@ import java.time.Instant
 @Service
 class MeetingInvitesUseCaseGroupImpl(
     val meetingInvitesService: MeetingInvitesService,
-    val meetingServiceInternal: MeetingsService,
+    val meetingService: MeetingsService,
 ) : MeetingInvitesUseCaseGroup {
     override fun createInvite(
         meetingId: Long,
@@ -29,14 +29,14 @@ class MeetingInvitesUseCaseGroupImpl(
 
         val meeting: Meeting
         try {
-            meeting = meetingServiceInternal.getMeetingById(meetingId)
+            meeting = meetingService.getMeetingById(meetingId)
         } catch (_: NotFoundAppError) {
             throw NotFoundHttpException("Cannot invite user: Meeting was not found")
         }
 
         if (senderId != meeting.ownerId) throw ForbiddenHttpException("Cannot invite user: you are not owner of this meeting")
 
-        if (meetingServiceInternal.isUserParticipant(targetId, meetingId)) throw BadRequestHttpException("Cannot invite user: target already participant of this meeting")
+        if (meetingService.isUserParticipant(targetId, meetingId)) throw BadRequestHttpException("Cannot invite user: target already participant of this meeting")
 
         return meetingInvitesService.createInvite(meetingId, senderId, targetId)
     }
@@ -53,7 +53,7 @@ class MeetingInvitesUseCaseGroupImpl(
         if (
             requesterId != invite.senderId &&
             requesterId != invite.targetId &&
-            !meetingServiceInternal.isUserParticipant(requesterId, invite.meetingId)
+            !meetingService.isUserParticipant(requesterId, invite.meetingId)
         ) throw ForbiddenHttpException("Cannot get invite info: you are not participant of this meeting")
 
         return invite
@@ -61,7 +61,7 @@ class MeetingInvitesUseCaseGroupImpl(
 
     override fun getMeetingInvites(meetingId: Long, requesterId: Long): List<MeetingInvite> {
         val invites = meetingInvitesService.getMeetingInvites(meetingId)
-        if (!meetingServiceInternal.isUserParticipant(requesterId, meetingId)) throw ForbiddenHttpException("Cannot get invites info: you are not participant of this meeting")
+        if (!meetingService.isUserParticipant(requesterId, meetingId)) throw ForbiddenHttpException("Cannot get invites info: you are not participant of this meeting")
 
         return invites
     }

@@ -18,14 +18,14 @@ import java.time.Instant
 class MeetingInvitesServiceImpl(
     val meetingInvitesRepository: MeetingInvitesRepository,
     val actionsService: ActionsService,
-    val meetingServiceInternal: MeetingsService,
+    val meetingService: MeetingsService,
     val objectMapperHelper: ObjectMapperHelper
 ) : MeetingInvitesService {
     override fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite {
         val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId)
 
-        actionsService.createAction(
-            scope = "users:$targetId",
+        actionsService.createUserAction(
+            userId = targetId,
             type = "meetings:invited",
             data = UserActionInvitedToMeetingSchema(
                 senderId = senderId,
@@ -67,10 +67,10 @@ class MeetingInvitesServiceImpl(
             )
         )
 
-        meetingServiceInternal.createMeetingParticipant(invite.meetingId, invite.targetId)
+        meetingService.createMeetingParticipant(invite.meetingId, invite.targetId)
 
-        actionsService.createAction(
-            scope = "users:${invite.senderId}",
+        actionsService.createUserAction(
+            userId = invite.senderId,
             type = "meetings:invite_status_updated",
             data = UserActionInviteStatusUpdatedSchema(
                 meetingId = invite.meetingId,
@@ -120,8 +120,8 @@ class MeetingInvitesServiceImpl(
             )
         )
 
-        actionsService.createAction(
-            scope = "users:${invite.senderId}",
+        actionsService.createUserAction(
+            userId = invite.senderId,
             type = "meetings:invite_status_updated",
             data = UserActionInviteStatusUpdatedSchema(
                 meetingId = invite.meetingId,
@@ -164,8 +164,8 @@ class MeetingInvitesServiceImpl(
             )
         )
 
-        actionsService.createAction(
-            scope = "users:${invite.senderId}",
+        actionsService.createUserAction(
+            userId = invite.senderId,
             type = "meetings:invite_reschedule_requested",
             data = UserActionInviteRescheduleRequestedSchema(
                 meetingId = invite.meetingId,
@@ -206,11 +206,11 @@ class MeetingInvitesServiceImpl(
         if (shouldReschedule) {
             @Suppress("UNCHECKED_CAST")  // TODO: Refactor it
             val rescheduleTo = objectMapperHelper.convertFromStringsMap(invite.statusData!! as Map<String, String>, InviteRescheduleStatusDataScheme::class.java).rescheduleTo
-            meetingServiceInternal.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo)
+            meetingService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo)
         }
 
-        actionsService.createAction(
-            scope = "users:${invite.targetId}",
+        actionsService.createUserAction(
+            userId = invite.targetId,
             type = "meetings:invite_reschedule_responded",
             data = UserActionInviteRescheduleRespondedSchema(
                 meetingId = invite.meetingId,
