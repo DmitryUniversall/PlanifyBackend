@@ -1,0 +1,92 @@
+package com.planify.planifyspring.main.features.meetings.domain.use_cases_impl
+
+import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
+import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
+import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
+import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
+import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+
+@Service
+class MeetingsServiceUseCaseGroupImpl(
+    val meetingsService: MeetingsService,
+) : MeetingsServiceUseCaseGroup {
+    override fun createMeeting(
+        creatorId: Long,
+        name: String,
+        description: String,
+        location: String,
+        startsAt: Instant,
+        duration: Int,
+    ): Meeting {
+        return meetingsService.createMeeting(creatorId, name, description, location, startsAt, duration)
+    }
+
+    override fun createMeetingParticipant(
+        meetingId: Long,
+        userId: Long
+    ): MeetingParticipant {
+        return meetingsService.createMeetingParticipant(meetingId, userId)
+    }
+
+    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
+        return meetingsService.isUserParticipant(userId, meetingId)
+    }
+
+    @Transactional
+    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant, requesterId: Long) {
+        patchMeeting(
+            meetingId = meetingId,
+            requesterId = requesterId,
+            patch = MeetingPatchSchema(
+                startsAt = rescheduleTo
+            )
+        )
+    }
+
+    override fun getMeetingById(
+        meetingId: Long,
+        requesterId: Long
+    ): Meeting? {
+        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
+        return meetingsService.getMeetingById(meetingId)
+    }
+
+    override fun getMeetingWithParticipantIds(
+        meetingId: Long,
+        requesterId: Long
+    ): MeetingWithParticipantIds {
+        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
+        return meetingsService.getMeetingWithParticipantIds(meetingId)
+    }
+
+    @Transactional
+    override fun patchMeeting(
+        meetingId: Long,
+        patch: MeetingPatchSchema,
+        requesterId: Long
+    ) {
+        // TODO: Check if updated is owner
+        return meetingsService.patchMeeting(meetingId, patch)
+    }
+
+    override fun getUserDailyMeetingsWithParticipantIds(
+        userId: Long,
+        startAt: Instant,
+        endAt: Instant
+    ): Map<Instant, List<MeetingWithParticipantIds>> {
+        return meetingsService.getUserDailyMeetingsWithParticipantIds(userId, startAt, endAt)
+    }
+
+    override fun getUserDailyMeetingsShort(
+        userId: Long,
+        startAt: Instant,
+        endAt: Instant
+    ): Map<Instant, Long> {
+        return meetingsService.getUserDailyMeetingsShort(userId, startAt, endAt)
+    }
+}

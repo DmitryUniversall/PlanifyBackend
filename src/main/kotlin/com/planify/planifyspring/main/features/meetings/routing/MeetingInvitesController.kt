@@ -5,7 +5,7 @@ import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
+import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_invite.GetInviteResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_request.RescheduleRequestDTO
@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/meetings/invites")
 class MeetingInvitesController(
-    val meetingInviteService: MeetingInvitesService
+    val meetingInviteUseCaseGroup: MeetingInvitesUseCaseGroup
 ) {
     @PostMapping("")
     fun sendInvite(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: SendInviteRequestDTO
     ): ResponseEntity<ApplicationResponse<SendInviteResponseDTO>> {
-        val invite = meetingInviteService.createInvite(
+        val invite = meetingInviteUseCaseGroup.createInvite(
             meetingId = body.meetingId,
             senderId = authContext.user.id,
             targetId = body.targetUserId
@@ -44,7 +44,7 @@ class MeetingInvitesController(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable inviteUuid: String
     ): ResponseEntity<ApplicationResponse<GetInviteResponseDTO>> {
-        val invite = meetingInviteService.getInvite(
+        val invite = meetingInviteUseCaseGroup.getInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id
         ) ?: throw NotFoundHttpException("Invite was not found")
@@ -61,7 +61,7 @@ class MeetingInvitesController(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable inviteUuid: String
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        meetingInviteService.acceptInvite(
+        meetingInviteUseCaseGroup.acceptInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id
         )
@@ -74,7 +74,7 @@ class MeetingInvitesController(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable inviteUuid: String
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        meetingInviteService.rejectInvite(
+        meetingInviteUseCaseGroup.rejectInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id
         )
@@ -88,7 +88,7 @@ class MeetingInvitesController(
         @PathVariable inviteUuid: String,
         @RequestBody body: RescheduleRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        meetingInviteService.requestRescheduleInvite(
+        meetingInviteUseCaseGroup.requestRescheduleInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id,
             rescheduleTo = body.rescheduleTo.asUTCInstant()
@@ -104,7 +104,7 @@ class MeetingInvitesController(
         @RequestBody body: RescheduleAnswerRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
 
-        meetingInviteService.responseRescheduleInvite(
+        meetingInviteUseCaseGroup.responseRescheduleInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id,
             shouldReschedule = body.shouldReschedule

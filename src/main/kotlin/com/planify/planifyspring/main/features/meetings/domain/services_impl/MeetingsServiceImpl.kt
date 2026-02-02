@@ -39,44 +39,11 @@ class MeetingsServiceImpl(
         return meeting
     }
 
-    override fun createMeetingParticipant(
-        meetingId: Long,
-        userId: Long
-    ): MeetingParticipant {
-        return meetingsRepository.createMeetingParticipant(
-            meetingId = meetingId,
-            userId = userId
-        )
+    override fun getMeetingById(meetingId: Long): Meeting? {
+        return meetingsRepository.getMeetingById(meetingId)
     }
 
-    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
-        return meetingsRepository.isUserParticipant(userId, meetingId)
-    }
-
-    @Transactional
-    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant, requesterId: Long) {
-        patchMeeting(
-            meetingId = meetingId,
-            updaterId = requesterId,
-            patch = MeetingPatchSchema(
-                startsAt = rescheduleTo
-            )
-        )
-    }
-
-    override fun getMeetingById(
-        meetingId: Long,
-        requesterId: Long
-    ): Meeting? {
-        return meetingsRepository.getMeetingById(meetingId)  // TODO: Check if requester is meeting participant
-    }
-
-    @Transactional
-    override fun patchMeeting(  // TODO: Check if updated is owner
-        meetingId: Long,
-        updaterId: Long,
-        patch: MeetingPatchSchema
-    ) {
+    override fun patchMeeting(meetingId: Long, patch: MeetingPatchSchema) {
         meetingsRepository.patchMeeting(meetingId, patch)
     }
 
@@ -88,11 +55,32 @@ class MeetingsServiceImpl(
         return meetingsRepository.getUserDailyMeetingsWithParticipantIds(userId, startAt, endAt)
     }
 
-    override fun getUserDailyMeetingsShort(
-        userId: Long,
-        startAt: Instant,
-        endAt: Instant
-    ): Map<Instant, Long> {
+    override fun getUserDailyMeetingsShort(userId: Long, startAt: Instant, endAt: Instant): Map<Instant, Long> {
         return meetingsRepository.getUserDailyMeetingsShort(userId, startAt, endAt)
+    }
+
+    override fun createMeetingParticipant(meetingId: Long, userId: Long): MeetingParticipant {
+        return meetingsRepository.createMeetingParticipant(
+            meetingId = meetingId,
+            userId = userId
+        )
+    }
+
+    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
+        return meetingsRepository.isUserParticipant(userId, meetingId)
+    }
+
+    @Transactional
+    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant) {
+        patchMeeting(
+            meetingId = meetingId,
+            patch = MeetingPatchSchema(
+                startsAt = rescheduleTo
+            )
+        )
+    }
+
+    override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds {
+        TODO("Not yet implemented")
     }
 }

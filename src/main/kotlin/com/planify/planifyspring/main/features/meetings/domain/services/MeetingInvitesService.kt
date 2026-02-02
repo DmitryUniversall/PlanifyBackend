@@ -6,15 +6,19 @@ import java.time.Instant
 interface MeetingInvitesService {
     fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite
 
-    fun getInvite(inviteUuid: String, requesterId: Long): MeetingInvite?
+    fun getInvite(inviteUuid: String): MeetingInvite
 
-    fun getMeetingInvites(meetingId: Long, requesterId: Long): List<MeetingInvite>
+    fun getMeetingInvites(meetingId: Long): List<MeetingInvite>
 
-    fun acceptInvite(inviteUuid: String, requesterId: Long)
+    fun acceptInvite(invite: MeetingInvite)
+    fun acceptInvite(inviteUuid: String)
 
-    fun rejectInvite(inviteUuid: String, requesterId: Long)
+    fun rejectInvite(invite: MeetingInvite)
+    fun rejectInvite(inviteUuid: String)
 
-    fun requestRescheduleInvite(inviteUuid: String, rescheduleTo: Instant, requesterId: Long)
+    fun requestRescheduleInvite(invite: MeetingInvite, rescheduleTo: Instant)
+    fun requestRescheduleInvite(inviteUuid: String, rescheduleTo: Instant)
 
-    fun responseRescheduleInvite(inviteUuid: String, shouldReschedule: Boolean, requesterId: Long)
+    fun responseRescheduleInvite(invite: MeetingInvite, shouldReschedule: Boolean)
+    fun responseRescheduleInvite(inviteUuid: String, shouldReschedule: Boolean)
 }

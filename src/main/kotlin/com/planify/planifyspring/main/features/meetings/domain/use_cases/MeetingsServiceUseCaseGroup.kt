@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.meetings.domain.services
+package com.planify.planifyspring.main.features.meetings.domain.use_cases
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
@@ -6,23 +6,25 @@ import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingW
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import java.time.Instant
 
-interface MeetingsService {
+interface MeetingsServiceUseCaseGroup {
     fun createMeeting(
-        ownerId: Long,
+        creatorId: Long,
         name: String,
         description: String,
         location: String,
         startsAt: Instant,
-        duration: Int,
+        duration: Int
     ): Meeting
 
     fun getMeetingById(
-        meetingId: Long
+        meetingId: Long,
+        requesterId: Long
     ): Meeting?
 
     fun patchMeeting(
         meetingId: Long,
-        patch: MeetingPatchSchema
+        patch: MeetingPatchSchema,
+        requesterId: Long
     )
 
     fun getUserDailyMeetingsWithParticipantIds(
@@ -49,10 +51,12 @@ interface MeetingsService {
 
     fun rescheduleMeeting(
         meetingId: Long,
-        rescheduleTo: Instant
+        rescheduleTo: Instant,
+        requesterId: Long
     )
 
     fun getMeetingWithParticipantIds(
-        meetingId: Long
+        meetingId: Long,
+        requesterId: Long
     ): MeetingWithParticipantIds
 }
