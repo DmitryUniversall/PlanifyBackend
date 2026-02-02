@@ -1,8 +1,6 @@
 package com.planify.planifyspring.main.features.profiles.domain.services_impl
 
-import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
-import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.repositories.ProfilesRepository
 import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
@@ -30,11 +28,6 @@ class ProfilesServiceImpl(
         val cache = cacheManager.getCache("profiles:${userId}")!!
         cache.evict("profiles:${userId}")
 
-        try {
-            return profilesRepository.patchProfile(userId, patch)
-        } catch (_: NotFoundAppError) {  // TODO: Do (select -> modify) to throw NotFoundAppError or keep it like this?
-            throw NotFoundHttpException("Profile for this user was not found")
-        }
+        return profilesRepository.patchProfile(userId, patch)
     }
 }
-
