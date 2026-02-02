@@ -18,7 +18,7 @@ interface MeetingsService {
 
     fun getMeetingById(
         meetingId: Long
-    ): Meeting?
+    ): Meeting
 
     fun patchMeeting(
         meetingId: Long,

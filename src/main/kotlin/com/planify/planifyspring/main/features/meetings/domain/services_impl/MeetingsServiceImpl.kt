@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
+import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
@@ -39,8 +40,8 @@ class MeetingsServiceImpl(
         return meeting
     }
 
-    override fun getMeetingById(meetingId: Long): Meeting? {
-        return meetingsRepository.getMeetingById(meetingId)
+    override fun getMeetingById(meetingId: Long): Meeting {
+        return meetingsRepository.getMeetingById(meetingId) ?: throw NotFoundAppError("Meeting was not found")
     }
 
     override fun patchMeeting(meetingId: Long, patch: MeetingPatchSchema) {

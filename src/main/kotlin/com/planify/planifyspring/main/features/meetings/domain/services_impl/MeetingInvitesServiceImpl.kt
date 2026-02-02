@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
+import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.common.utils.ObjectMapperHelper
-import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
@@ -52,7 +52,7 @@ class MeetingInvitesServiceImpl(
     }
 
     override fun getInvite(inviteUuid: String): MeetingInvite {
-        return meetingInvitesRepository.getInvite(inviteUuid) ?: throw NotFoundHttpException("Invite was not found")
+        return meetingInvitesRepository.getInvite(inviteUuid) ?: throw NotFoundAppError("Invite was not found")
     }
 
     override fun getMeetingInvites(meetingId: Long): List<MeetingInvite> {

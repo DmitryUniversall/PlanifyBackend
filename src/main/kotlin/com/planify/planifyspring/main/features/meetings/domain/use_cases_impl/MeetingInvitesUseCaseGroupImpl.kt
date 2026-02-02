@@ -1,13 +1,15 @@
 package com.planify.planifyspring.main.features.meetings.domain.use_cases_impl
 
+import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
 import com.planify.planifyspring.main.exceptions.generics.ForbiddenHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
+import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
-import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
+import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import org.springframework.stereotype.Service
 import java.time.Instant
 
@@ -25,7 +27,13 @@ class MeetingInvitesUseCaseGroupImpl(
         val invites = getMeetingInvites(meetingId, senderId)
         if (invites.firstOrNull { it.targetId == targetId } != null) throw BadRequestHttpException("Cannot invite user: target already has an invite to this meeting")
 
-        val meeting = meetingServiceInternal.getMeetingById(meetingId) ?: throw NotFoundHttpException("Meeting was not found")
+        val meeting: Meeting
+        try {
+            meeting = meetingServiceInternal.getMeetingById(meetingId)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Cannot invite user: Meeting was not found")
+        }
+
         if (senderId != meeting.ownerId) throw ForbiddenHttpException("Cannot invite user: you are not owner of this meeting")
 
         if (meetingServiceInternal.isUserParticipant(targetId, meetingId)) throw BadRequestHttpException("Cannot invite user: target already participant of this meeting")
@@ -34,7 +42,13 @@ class MeetingInvitesUseCaseGroupImpl(
     }
 
     override fun getInvite(inviteUuid: String, requesterId: Long): MeetingInvite {
-        val invite = meetingInvitesService.getInvite(inviteUuid)
+        val invite: MeetingInvite
+
+        try {
+            invite = meetingInvitesService.getInvite(inviteUuid)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Invite was not found")
+        }
 
         if (
             requesterId != invite.senderId &&

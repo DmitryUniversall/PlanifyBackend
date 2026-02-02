@@ -1,12 +1,14 @@
 package com.planify.planifyspring.main.features.meetings.domain.use_cases_impl
 
+import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
+import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
-import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
+import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -51,9 +53,14 @@ class MeetingsServiceUseCaseGroupImpl(
     override fun getMeetingById(
         meetingId: Long,
         requesterId: Long
-    ): Meeting? {
+    ): Meeting {
         if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
-        return meetingsService.getMeetingById(meetingId)
+
+        try {
+            return meetingsService.getMeetingById(meetingId)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Meeting was not found")
+        }
     }
 
     override fun getMeetingWithParticipantIds(
