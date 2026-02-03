@@ -103,4 +103,14 @@ class MeetingsRepositoryImpl(
     override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
         return meetingParticipantJpaRepository.existsByUserIdAndMeeting_Id(userId, meetingId)
     }
+
+    override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds? {
+        val records = meetingParticipantJpaRepository.getMeetingWithParticipantIds(meetingId)
+        if (records.isEmpty()) return null
+
+        return MeetingWithParticipantIds(
+            meeting = records[0].meeting.toEntity(),
+            participantIds = records.map { it.participantId }
+        )
+    }
 }

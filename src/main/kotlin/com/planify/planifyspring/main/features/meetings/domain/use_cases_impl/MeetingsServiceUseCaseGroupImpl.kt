@@ -68,7 +68,11 @@ class MeetingsServiceUseCaseGroupImpl(
         requesterId: Long
     ): MeetingWithParticipantIds {
         if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
-        return meetingsService.getMeetingWithParticipantIds(meetingId)
+        try {
+            return meetingsService.getMeetingWithParticipantIds(meetingId)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Meeting was not found")
+        }
     }
 
     @Transactional

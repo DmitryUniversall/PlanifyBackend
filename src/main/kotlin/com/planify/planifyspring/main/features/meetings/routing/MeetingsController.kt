@@ -9,6 +9,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
+import com.planify.planifyspring.main.features.meetings.routing.dto.GetMeetingParticipantsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingContextDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
@@ -78,6 +79,24 @@ class MeetingsController(
             GetMeetingResponseDTO(
 
                 meeting = MeetingDTO.fromEntity(meeting)
+            ).asSuccessApplicationResponse()
+        )
+    }
+
+    @GetMapping("/{meetingId}/participants")
+    fun getMeetingParticipants(
+        @AuthenticationPrincipal authContext: AuthContext,
+        @PathVariable meetingId: Long,
+    ): ResponseEntity<ApplicationResponse<GetMeetingParticipantsResponseDTO>> {
+        val info = meetingsServiceUseCaseGroup.getMeetingWithParticipantIds(
+            meetingId = meetingId,
+            requesterId = authContext.user.id
+        )
+
+        return ResponseEntity.ok(
+            GetMeetingParticipantsResponseDTO(
+                meeting = MeetingDTO.fromEntity(info.meeting),
+                participantIds = info.participantIds
             ).asSuccessApplicationResponse()
         )
     }

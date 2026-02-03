@@ -8,7 +8,22 @@ import org.springframework.data.jpa.repository.Query
 import java.time.Instant
 
 interface MeetingParticipantJpaRepository : JpaRepository<MeetingParticipantModel, Long> {
+    @Suppress("FunctionName")
     fun existsByUserIdAndMeeting_Id(userId: Long, meetingId: Long): Boolean
+
+    @Query(
+        """
+            SELECT new com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord(
+                m,
+                mp.userId
+            )
+            FROM MeetingParticipantModel mp
+            JOIN MeetingModel m
+                ON m.id = mp.meeting.id
+            WHERE mp.meeting.id = :meetingId
+        """
+    )
+    fun getMeetingWithParticipantIds(meetingId: Long): List<MeetingParticipantIdRecord>
 
     @Query(  // TODO: Should i use JPQL here?
         """

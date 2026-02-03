@@ -82,6 +82,6 @@ class MeetingsServiceImpl(
     }
 
     override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds {
-        TODO("Not yet implemented")
+        return meetingsRepository.getMeetingWithParticipantIds(meetingId) ?: throw NotFoundAppError("Meeting was not found")
     }
 }

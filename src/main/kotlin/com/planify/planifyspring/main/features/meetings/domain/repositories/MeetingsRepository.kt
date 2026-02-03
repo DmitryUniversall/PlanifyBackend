@@ -43,4 +43,6 @@ interface MeetingsRepository {
     ): MeetingParticipant
 
     fun isUserParticipant(userId: Long, meetingId: Long): Boolean
+
+    fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds?
 }
