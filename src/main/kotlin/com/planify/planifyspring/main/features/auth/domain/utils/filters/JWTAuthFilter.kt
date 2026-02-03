@@ -2,11 +2,10 @@ package com.planify.planifyspring.main.features.auth.domain.utils.filters
 
 import com.planify.planifyspring.main.features.auth.domain.exceptions.AuthorizationTokenNotSpecifiedHttpException
 import com.planify.planifyspring.main.features.auth.domain.exceptions.AuthorizationTypeUnknownHttpException
-import com.planify.planifyspring.main.features.auth.domain.services.AuthService
+import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
@@ -16,7 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 class JWTAuthFilter(
-    private val authService: AuthService
+    private val authUseCaseGroup: AuthUseCaseGroup
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain) {
         val header = request.getHeader("Authorization")
@@ -31,7 +30,7 @@ class JWTAuthFilter(
         val token = header.substring(7)
         if (token.isEmpty()) throw AuthorizationTokenNotSpecifiedHttpException("Authorization token is missing")
 
-        val authContext = authService.authenticate(token)
+        val authContext = authUseCaseGroup.authenticate(token)
 
         val authorities = authContext.accessInfo.roles.map { SimpleGrantedAuthority("ROLE_${it.name}") } + authContext.accessInfo.authorities.map { SimpleGrantedAuthority(it.name) }
         val auth = UsernamePasswordAuthenticationToken(authContext, null, authorities)

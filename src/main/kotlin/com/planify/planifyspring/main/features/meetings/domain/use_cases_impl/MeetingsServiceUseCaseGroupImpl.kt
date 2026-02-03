@@ -9,11 +9,11 @@ import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingW
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
-@Service
+@Component
 class MeetingsServiceUseCaseGroupImpl(
     val meetingsService: MeetingsService,
 ) : MeetingsServiceUseCaseGroup {

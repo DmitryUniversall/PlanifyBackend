@@ -1,48 +1,31 @@
 package com.planify.planifyspring.main.features.auth.domain.services
 
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
-import com.planify.planifyspring.main.features.auth.domain.entities.User
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
+import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
+import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPayload
+import com.planify.planifyspring.main.features.auth.domain.entities.User
 
 interface AuthService {
-    fun authenticate(accessToken: String): AuthContext
+    fun decodeJwtToken(token: String): AuthTokenPayload
 
-    fun refresh(refreshToken: String, currentUserAgent: String): AuthTokenPair
+    fun startSession(userId: Long, userAgent: String, sessionName: String): Pair<AuthSession, AuthTokenPair>
 
-    fun revokeSession(
-        userId: Long,
-        sessionUuid: String
-    )
+    fun getSession(userId: Long, sessionUuid: String): AuthSession
 
-    fun login(
-        email: String,
-        passwordRaw: String,
-        userAgent: String,
-        sessionName: String
-    ): Pair<AuthContext, AuthTokenPair>
+    fun getUserSessions(userId: Long): List<AuthSession>
+    fun getActiveUserSessions(userId: Long): List<AuthSession>
 
-    fun register(
-        username: String,
-        email: String,
-        passwordRaw: String,
-        userAgent: String,
-        sessionName: String
-    ): Pair<AuthContext, AuthTokenPair>
+    fun rotateSessionTokens(session: AuthSession) : AuthTokenPair
+    fun rotateSessionTokens(userId: Long, sessionUuid: String): AuthTokenPair
 
-    fun createUser(
-        username: String,
-        email: String,
-        passwordRaw: String
-    ): User
+    fun revokeSession(userId: Long, sessionUuid: String)
+
+    fun createUser(username: String, email: String, passwordRaw: String): User
 
     fun getUserById(id: Long): User
     fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
-
-    fun getUserSessions(userId: Long): List<AuthSession>
-    fun getActiveUserSessions(userId: Long): List<AuthSession>
 }

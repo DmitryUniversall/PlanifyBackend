@@ -10,11 +10,11 @@ import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingI
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.time.Instant
 
 
-@Service
+@Component
 class MeetingInvitesUseCaseGroupImpl(
     val meetingInvitesService: MeetingInvitesService,
     val meetingService: MeetingsService,

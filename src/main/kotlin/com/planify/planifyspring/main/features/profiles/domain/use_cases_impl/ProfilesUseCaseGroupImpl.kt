@@ -6,9 +6,9 @@ import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class ProfilesUseCaseGroupImpl(
     val profilesService: ProfilesService,
 ) : ProfilesUseCaseGroup {

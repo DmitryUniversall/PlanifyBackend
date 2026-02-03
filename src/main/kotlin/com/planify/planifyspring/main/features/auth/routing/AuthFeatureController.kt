@@ -4,7 +4,7 @@ import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.auth.domain.services.AuthService
+import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
 import com.planify.planifyspring.main.features.auth.routing.dto.AccessInfoDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthSessionPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.AuthTokenPairDTO
@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/auth")
 class AuthFeatureController(
-    private val authService: AuthService
+    val authUseCaseGroup: AuthUseCaseGroup
 ) {
     @PostMapping("/login")
     fun login(
         @RequestHeader("User-Agent") userAgent: String,
         @RequestBody body: LoginRequestDTO
     ): ResponseEntity<ApplicationResponse<LoginResponseDTO>> {
-        val (info, tokens) = authService.login(
+        val (info, tokens) = authUseCaseGroup.login(
             email = body.email,
             passwordRaw = body.password,
             userAgent = userAgent,
@@ -52,7 +52,7 @@ class AuthFeatureController(
         @RequestHeader("User-Agent") userAgent: String,
         @RequestBody body: RegisterRequestDTO
     ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
-        val (info, tokens) = authService.register(
+        val (info, tokens) = authUseCaseGroup.register(
             email = body.email,
             username = body.username,
             passwordRaw = body.password,
@@ -75,7 +75,7 @@ class AuthFeatureController(
         @RequestHeader("User-Agent") userAgent: String,
         @RequestBody body: RefreshRequestDTO
     ): ResponseEntity<ApplicationResponse<RefreshResponseDTO>> {
-        val tokens = authService.refresh(
+        val tokens = authUseCaseGroup.refresh(
             refreshToken = body.refreshToken,
             currentUserAgent = userAgent
         )
@@ -92,7 +92,7 @@ class AuthFeatureController(
     fun logout(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authService.revokeSession(userId = authContext.user.id, sessionUuid = authContext.session.uuid)
+        authUseCaseGroup.revokeSession(userId = authContext.user.id, sessionUuid = authContext.session.uuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -101,7 +101,7 @@ class AuthFeatureController(
         @PathVariable sessionUuid: String,
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authService.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
+        authUseCaseGroup.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -109,23 +109,23 @@ class AuthFeatureController(
     fun getUserSessions(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<GetSessionsResponseDTO>> {
-        val sessions = authService.getActiveUserSessions(authContext.user.id)
+        val sessions = authUseCaseGroup.getActiveUserSessions(authContext.user.id)
 
         return ResponseEntity.ok(
             GetSessionsResponseDTO(
-            sessions = sessions.map { AuthSessionPrivateDTO.fromEntity(it) }
-        ).asSuccessApplicationResponse())
+                sessions = sessions.map { AuthSessionPrivateDTO.fromEntity(it) }
+            ).asSuccessApplicationResponse())
     }
 
     @DeleteMapping("/sessions/active")
     fun revokeAllSessionsExceptCurrent(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        val sessions = authService.getActiveUserSessions(authContext.user.id)
+        val sessions = authUseCaseGroup.getActiveUserSessions(authContext.user.id)
 
         sessions.forEach { // TODO: Optimise it?
             if (it.uuid == authContext.session.uuid) return@forEach
-            authService.revokeSession(authContext.user.id, it.uuid)
+            authUseCaseGroup.revokeSession(authContext.user.id, it.uuid)
         }
 
         return ResponseEntity.ok(ApplicationResponse.success())
