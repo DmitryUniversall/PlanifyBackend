@@ -1,6 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
+import com.planify.planifyspring.core.utils.atStartOfAnHour
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
@@ -28,7 +29,7 @@ class MeetingsServiceImpl(
             name = name,
             description = description,
             location = location,
-            startsAt = startsAt,
+            startsAt = startsAt.atStartOfAnHour(),
             duration = duration
         )
 
@@ -67,10 +68,6 @@ class MeetingsServiceImpl(
         )
     }
 
-    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
-        return meetingsRepository.isUserParticipant(userId, meetingId)
-    }
-
     @Transactional
     override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant) {
         patchMeeting(
@@ -83,5 +80,13 @@ class MeetingsServiceImpl(
 
     override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds {
         return meetingsRepository.getMeetingWithParticipantIds(meetingId) ?: throw NotFoundAppError("Meeting was not found")
+    }
+
+    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
+        return meetingsRepository.isUserParticipant(userId, meetingId)
+    }
+
+    override fun userHasMeetingsBetween(userId: Long, startAt: Instant, endAt: Instant): Boolean {
+        return meetingsRepository.userHasMeetingsBetween(userId, startAt, endAt)
     }
 }

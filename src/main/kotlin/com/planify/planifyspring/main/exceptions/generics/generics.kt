@@ -56,3 +56,12 @@ open class ForbiddenHttpException(
     appCode = appCode,
     message = message
 )
+
+open class AlreadyInUseHttpException(
+    message: String?,
+    appCode: Int = 2011
+) : ApplicationHttpException(
+    httpStatus = HttpStatus.CONFLICT,
+    appCode = appCode,
+    message = message
+)

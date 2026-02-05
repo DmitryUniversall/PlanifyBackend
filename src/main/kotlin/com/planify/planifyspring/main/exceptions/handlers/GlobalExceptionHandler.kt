@@ -14,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.NoHandlerFoundException
 
 @RestControllerAdvice
@@ -104,12 +105,22 @@ class GlobalExceptionHandler {  // TODO: Split this into different handlers
         e: MissingServletRequestParameterException,
         request: WebRequest
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-
         return buildErrorResponse(
             error = e,
             status = HttpStatus.BAD_REQUEST,
             appCode = 2005,
             message = "Required request parameter '${e.parameterName}' is not present"
+        )
+    }
+
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleTypeMismatch(e: MethodArgumentTypeMismatchException): ResponseEntity<ApplicationResponse<Nothing>> {
+        return buildErrorResponse(
+            error = e,
+            status = HttpStatus.BAD_REQUEST,
+            appCode = 2005,
+            message = "Bad url or parameter argument format"
         )
     }
 

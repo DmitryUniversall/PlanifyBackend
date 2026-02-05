@@ -63,4 +63,19 @@ interface MeetingParticipantJpaRepository : JpaRepository<MeetingParticipantMode
         startAt: Instant,
         endAt: Instant
     ): List<DayMeetingsCountRecord>
+
+    @Query(
+        """
+            SELECT EXISTS (
+                SELECT 1
+                FROM meeting_participants mp
+                JOIN meetings m
+                    ON m.id = mp.meeting_id
+                WHERE
+                    mp.user_id = :userId AND 
+                    m.starts_at BETWEEN :startAt AND :endAt
+            ) 
+        """, nativeQuery = true
+    )
+    fun userHasMeetingsBetween(userId: Long, startAt: Instant, endAt: Instant): Boolean
 }

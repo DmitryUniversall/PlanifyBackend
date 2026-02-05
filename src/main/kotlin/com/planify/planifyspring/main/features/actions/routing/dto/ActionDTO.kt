@@ -5,7 +5,7 @@ import com.planify.planifyspring.main.features.actions.domain.entities.Action
 data class ActionDTO(
     val uuid: String,
     val type: String,
-    val data: Any
+    val data: Any?
 ) {
     companion object {
         fun fromEntity(entity: Action): ActionDTO {

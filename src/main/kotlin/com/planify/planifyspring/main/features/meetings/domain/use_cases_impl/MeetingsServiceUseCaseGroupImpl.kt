@@ -1,6 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.domain.use_cases_impl
 
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
+import com.planify.planifyspring.core.utils.atStartOfAnHour
 import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
@@ -25,6 +26,10 @@ class MeetingsServiceUseCaseGroupImpl(
         startsAt: Instant,
         duration: Int,
     ): Meeting {
+        val start = startsAt.atStartOfAnHour()
+        val end = start.plusSeconds(duration * 3600L)
+
+        if (meetingsService.userHasMeetingsBetween(userId = creatorId, startAt = start, endAt = end)) throw BadRequestHttpException("User already has meeting at this time interval")
         return meetingsService.createMeeting(creatorId, name, description, location, startsAt, duration)
     }
 

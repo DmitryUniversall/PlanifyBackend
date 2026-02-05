@@ -42,10 +42,6 @@ interface MeetingsService {
         userId: Long
     ): MeetingParticipant
 
-    fun isUserParticipant(
-        userId: Long,
-        meetingId: Long,
-    ): Boolean
 
     fun rescheduleMeeting(
         meetingId: Long,
@@ -55,4 +51,15 @@ interface MeetingsService {
     fun getMeetingWithParticipantIds(
         meetingId: Long
     ): MeetingWithParticipantIds
+
+    fun isUserParticipant(
+        userId: Long,
+        meetingId: Long,
+    ): Boolean
+
+    fun userHasMeetingsBetween(
+        userId: Long,
+        startAt: Instant,
+        endAt: Instant
+    ): Boolean
 }

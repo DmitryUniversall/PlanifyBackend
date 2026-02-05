@@ -100,10 +100,6 @@ class MeetingsRepositoryImpl(
         return model.toEntity()
     }
 
-    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
-        return meetingParticipantJpaRepository.existsByUserIdAndMeeting_Id(userId, meetingId)
-    }
-
     override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds? {
         val records = meetingParticipantJpaRepository.getMeetingWithParticipantIds(meetingId)
         if (records.isEmpty()) return null
@@ -112,5 +108,13 @@ class MeetingsRepositoryImpl(
             meeting = records[0].meeting.toEntity(),
             participantIds = records.map { it.participantId }
         )
+    }
+
+    override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
+        return meetingParticipantJpaRepository.existsByUserIdAndMeeting_Id(userId, meetingId)
+    }
+
+    override fun userHasMeetingsBetween(userId: Long, startAt: Instant, endAt: Instant): Boolean {
+        return meetingParticipantJpaRepository.userHasMeetingsBetween(userId, startAt, endAt)
     }
 }

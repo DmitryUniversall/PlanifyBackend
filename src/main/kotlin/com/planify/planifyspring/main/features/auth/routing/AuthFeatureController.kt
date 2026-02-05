@@ -5,10 +5,8 @@ import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
-import com.planify.planifyspring.main.features.auth.routing.dto.AccessInfoDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.AuthSessionPrivateDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.AuthTokenPairDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.*
+import com.planify.planifyspring.main.features.auth.routing.dto.get_auth_context.GetAuthContextResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
@@ -129,5 +127,16 @@ class AuthFeatureController(
         }
 
         return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @GetMapping("/context")
+    fun getAuthContext(
+        @AuthenticationPrincipal authContext: AuthContext
+    ): ResponseEntity<ApplicationResponse<GetAuthContextResponseDTO>> {
+        return ResponseEntity.ok(
+            GetAuthContextResponseDTO(
+                AuthContextDTO.fromEntity(authContext)
+            ).asSuccessApplicationResponse()
+        )
     }
 }

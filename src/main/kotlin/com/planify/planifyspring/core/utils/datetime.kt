@@ -24,3 +24,7 @@ fun LocalDate.atEndOfDayInstant(): Instant =
 
 fun LocalDateTime.asUTCInstant(): Instant =
     this.atZone(ZoneOffset.UTC).toInstant()
+
+fun Instant.atStartOfAnHour(): Instant {
+    return this.atZone(ZoneOffset.UTC).withMinute(0).withSecond(0).withNano(0).toInstant()
+}
