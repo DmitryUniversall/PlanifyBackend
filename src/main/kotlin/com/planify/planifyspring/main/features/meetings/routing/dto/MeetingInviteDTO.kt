@@ -4,7 +4,7 @@ import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingI
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
 import java.time.Instant
 
-class MeetingInviteDTO(
+data class MeetingInviteDTO(
     val uuid: String,
     val meetingId: Long,
     val senderId: Long,

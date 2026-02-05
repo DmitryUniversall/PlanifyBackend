@@ -9,7 +9,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
-import com.planify.planifyspring.main.features.meetings.routing.dto.GetMeetingParticipantsResponseDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting_participant.GetMeetingParticipantsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingContextDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
