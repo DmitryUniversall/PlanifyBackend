@@ -3,12 +3,13 @@ package com.planify.planifyspring.main.features.profiles.data.jpa
 import com.planify.planifyspring.main.features.profiles.data.models.ProfileModel
 import jakarta.transaction.Transactional
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ProfilesJpaRepository : JpaRepository<ProfileModel, Long> {
+interface ProfilesJpaRepository : JpaRepository<ProfileModel, Long>, JpaSpecificationExecutor<ProfileModel> {
     fun findByUserId(userId: Long): ProfileModel?
 
     @Modifying

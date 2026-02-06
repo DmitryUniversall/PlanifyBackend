@@ -6,6 +6,8 @@ import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 
 @Component
@@ -22,5 +24,12 @@ class ProfilesUseCaseGroupImpl(
         } catch (_: NotFoundAppError) {  // TODO: Do (select -> modify) to throw NotFoundAppError or keep it like this?
             throw NotFoundHttpException("Profile for this user was not found")
         }
+    }
+
+    override fun search(
+        input: String,
+        pageable: Pageable
+    ): Page<Profile> {
+        return profilesService.search(input, pageable)
     }
 }

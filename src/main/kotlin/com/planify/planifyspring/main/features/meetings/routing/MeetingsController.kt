@@ -9,16 +9,17 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingInvitesUseCaseGroup
 import com.planify.planifyspring.main.features.meetings.domain.use_cases.MeetingsServiceUseCaseGroup
-import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting_participant.GetMeetingParticipantsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingContextDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.create_meeting.CreateMeetingResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting.GetMeetingResponseDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.get_meeting_participant.GetMeetingParticipantsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings.GetMyMeetingsResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_my_meetings_short.GetMyMeetingsShortResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.patch_meeting.PatchMeetingRequestDTO
+import com.planify.planifyspring.main.features.meetings.routing.get_meeting_with_context.GetMeetingWithContextResponseDTO
 import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import org.springframework.format.annotation.DateTimeFormat
@@ -79,6 +80,38 @@ class MeetingsController(
             GetMeetingResponseDTO(
 
                 meeting = MeetingDTO.fromEntity(meeting)
+            ).asSuccessApplicationResponse()
+        )
+    }
+
+    @GetMapping("/{meetingId}/context")
+    fun getMeetingWithContext(
+        @AuthenticationPrincipal authContext: AuthContext,
+        @PathVariable meetingId: Long,
+    ): ResponseEntity<ApplicationResponse<GetMeetingWithContextResponseDTO>> {
+        val meetingWithParticipantIds = meetingsServiceUseCaseGroup.getMeetingWithParticipantIds(
+            meetingId = meetingId,
+            requesterId = authContext.user.id
+        )
+
+        val invites = meetingInvitesUseCaseGroup.getMeetingInvites(
+            meetingId = meetingWithParticipantIds.meeting.id,
+            requesterId = authContext.user.id
+        ).map { MeetingInviteDTO.fromEntity(it) }
+
+        val participantProfiles = meetingWithParticipantIds.participantIds.map {
+            ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it))  // TODO: Optimise it via db query
+        }
+
+        val meeting = MeetingDTO.fromEntity(meetingWithParticipantIds.meeting)
+
+        return ResponseEntity.ok(
+            GetMeetingWithContextResponseDTO(
+                meetingContext = MeetingContextDTO(
+                    participantProfiles = participantProfiles,
+                    invites = invites,
+                    meeting = meeting
+                )
             ).asSuccessApplicationResponse()
         )
     }

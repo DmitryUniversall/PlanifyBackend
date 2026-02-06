@@ -8,17 +8,20 @@ import com.planify.planifyspring.main.features.profiles.domain.use_cases.Profile
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.GetProfileResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.patch.PatchProfileRequestDTO
+import com.planify.planifyspring.main.features.profiles.routing.dto.search.SearchProfilesResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.update.UpdateProfileRequestDTO
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/profiles/my")
+@RequestMapping("/profiles")
 class MyProfileController(
     private val profilesUseCaseGroup: ProfilesUseCaseGroup
 ) {
-    @GetMapping("")
+    @GetMapping("/my")
     fun getProfile(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<GetProfileResponseDTO>> {
@@ -31,7 +34,7 @@ class MyProfileController(
         )
     }
 
-    @PatchMapping("")
+    @PatchMapping("/my")
     fun patchProfile(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: PatchProfileRequestDTO
@@ -47,7 +50,7 @@ class MyProfileController(
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @PutMapping("")
+    @PutMapping("/my")
     fun updateProfile(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: UpdateProfileRequestDTO
@@ -61,5 +64,19 @@ class MyProfileController(
         ))
 
         return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @GetMapping("/search")  // Public endpoint?
+    fun search(
+        @PageableDefault pageable: Pageable,
+        @RequestParam query: String,
+    ): ResponseEntity<ApplicationResponse<SearchProfilesResponseDTO>> {
+        val result = profilesUseCaseGroup.search(query, pageable)
+
+        return ResponseEntity.ok(
+            SearchProfilesResponseDTO(
+                result = result.map { ProfileDTO.fromEntity(it) }
+            ).asSuccessApplicationResponse()
+        )
     }
 }

@@ -6,6 +6,8 @@ import com.planify.planifyspring.main.features.profiles.domain.repositories.Prof
 import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import org.springframework.cache.CacheManager
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 
@@ -29,5 +31,12 @@ class ProfilesServiceImpl(
         cache.evict("profiles:${userId}")
 
         return profilesRepository.patchProfile(userId, patch)
+    }
+
+    override fun search(
+        input: String,
+        pageable: Pageable
+    ): Page<Profile> {
+        return profilesRepository.search(input, pageable)
     }
 }
