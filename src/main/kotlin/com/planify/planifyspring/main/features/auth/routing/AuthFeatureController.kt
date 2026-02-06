@@ -14,6 +14,7 @@ import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshR
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
+import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -55,7 +56,14 @@ class AuthFeatureController(
             username = body.username,
             passwordRaw = body.password,
             userAgent = userAgent,
-            sessionName = "${userAgent}-${getRandomString(8)}"
+            sessionName = "${userAgent}-${getRandomString(8)}",
+            createProfileSchema = CreateProfileSchema(
+                firstName = body.firstName,
+                lastName = body.lastName,
+                position = body.position,
+                department = body.department,
+                profileImageUrl = body.profileImageUrl
+            )
         )
 
         return ResponseEntity.ok(

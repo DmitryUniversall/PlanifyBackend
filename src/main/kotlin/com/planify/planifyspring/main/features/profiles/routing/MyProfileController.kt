@@ -3,7 +3,7 @@ package com.planify.planifyspring.main.features.profiles.routing
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
+import com.planify.planifyspring.main.features.profiles.domain.schemas.PatchProfileSchema
 import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.GetProfileResponseDTO
@@ -39,7 +39,7 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: PatchProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesUseCaseGroup.patchProfile(authContext.user.id, ProfilePatchSchema(
+        profilesUseCaseGroup.patchProfile(authContext.user.id, PatchProfileSchema(
             firstName = body.firstName,
             lastName = body.lastName,
             position = body.position,
@@ -55,7 +55,7 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: UpdateProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesUseCaseGroup.patchProfile(authContext.user.id, ProfilePatchSchema(
+        profilesUseCaseGroup.patchProfile(authContext.user.id, PatchProfileSchema(
             firstName = body.firstName,
             lastName = body.lastName,
             position = body.position,

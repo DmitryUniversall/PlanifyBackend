@@ -17,9 +17,11 @@ open class ProfileModel(
 
     val lastName: String,
 
-    val position: String,
+    @Column(unique = true)
+    val position: String?,
 
-    val department: String,
+    @Column(unique = true)
+    val department: String?,
 
     val profileImageUrl: String
 ) {

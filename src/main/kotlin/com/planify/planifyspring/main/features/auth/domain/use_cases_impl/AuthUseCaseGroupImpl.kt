@@ -8,6 +8,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.*
 import com.planify.planifyspring.main.features.auth.domain.exceptions.*
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
+import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.MalformedJwtException
@@ -132,9 +133,10 @@ class AuthUseCaseGroupImpl(
         email: String,
         passwordRaw: String,
         userAgent: String,
-        sessionName: String
+        sessionName: String,
+        createProfileSchema: CreateProfileSchema
     ): Pair<AuthContext, AuthTokenPair> {
-        val user = createUser(username, email, passwordRaw)
+        val user = createUser(username, email, passwordRaw, createProfileSchema)
         val (session, tokens) = authService.startSession(
             userId = user.id,
             userAgent = userAgent,
@@ -148,9 +150,9 @@ class AuthUseCaseGroupImpl(
         ) to tokens
     }
 
-    override fun createUser(username: String, email: String, passwordRaw: String): User {
+    override fun createUser(username: String, email: String, passwordRaw: String, createProfileSchema: CreateProfileSchema): User {
         try {
-            return authService.createUser(username, email, passwordRaw)
+            return authService.createUser(username, email, passwordRaw, createProfileSchema)
         } catch (error: AlreadyExistsAppError) {
             throw AlreadyExistsHttpException(error.message)
         }

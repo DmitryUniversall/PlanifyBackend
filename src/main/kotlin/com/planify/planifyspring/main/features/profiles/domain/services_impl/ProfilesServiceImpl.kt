@@ -3,7 +3,8 @@ package com.planify.planifyspring.main.features.profiles.domain.services_impl
 import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
 import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.repositories.ProfilesRepository
-import com.planify.planifyspring.main.features.profiles.domain.schemas.ProfilePatchSchema
+import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
+import com.planify.planifyspring.main.features.profiles.domain.schemas.PatchProfileSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
@@ -26,7 +27,7 @@ class ProfilesServiceImpl(
             .also { profile -> profile?.let { cache.put("profiles:$userId", profile) } }
     }
 
-    override fun patchProfile(userId: Long, patch: ProfilePatchSchema) {
+    override fun patchProfile(userId: Long, patch: PatchProfileSchema) {
         val cache = cacheManager.getCache("profiles:${userId}")!!
         cache.evict("profiles:${userId}")
 
@@ -38,5 +39,12 @@ class ProfilesServiceImpl(
         pageable: Pageable
     ): Page<Profile> {
         return profilesRepository.search(input, pageable)
+    }
+
+    override fun createProfile(
+        userId: Long,
+        schema: CreateProfileSchema
+    ): Profile {
+        return profilesRepository.createProfile(userId, schema)
     }
 }

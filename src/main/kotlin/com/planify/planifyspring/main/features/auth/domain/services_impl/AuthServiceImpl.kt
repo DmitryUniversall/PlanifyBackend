@@ -8,6 +8,8 @@ import com.planify.planifyspring.main.features.auth.domain.repositories.Sessions
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
+import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
+import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -20,7 +22,8 @@ class AuthServiceImpl(
     private val sessionsRepository: SessionsRepository,
     private val usersRepository: UsersRepository,
     private val cacheManager: CacheManager,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val profilesService: ProfilesService
 ) : AuthService {
     private fun generateTokenUuid(): String {
         return tokensRepository.generateTokenUuid()
@@ -140,9 +143,10 @@ class AuthServiceImpl(
     override fun createUser(
         username: String,
         email: String,
-        passwordRaw: String
+        passwordRaw: String,
+        createProfileSchema: CreateProfileSchema
     ): User {
-        return usersRepository.create(
+        val user = usersRepository.create(
             username = username,
             email = email,
             passwordHash = SecurityHelper.hashPassword(passwordRaw)
@@ -150,6 +154,10 @@ class AuthServiceImpl(
             val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
             cache.put(it.id.toString(), it)
         }
+
+        profilesService.createProfile(user.id, createProfileSchema)
+
+        return user
     }
 
     override fun getUserById(id: Long): User {
