@@ -2,7 +2,6 @@ package com.planify.planifyspring.main.features.actions.domain.services_impl
 
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
-import com.planify.planifyspring.main.features.actions.domain.schemas.PatchActionScheme
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import org.springframework.stereotype.Service
 
@@ -20,7 +19,16 @@ class ActionsServiceImpl(
 
     override fun createUserAction(userId: Long, type: String, data: Any): Action {
         val scope = getUserActionsScope(userId)
-        return actionsRepository.createAction(scope, type, data)
+        return createAction(scope, type, data)
+    }
+
+    override fun deleteAction(scope: String, actionId: String) {
+        actionsRepository.deleteAction(scope, actionId)
+    }
+
+    override fun deleteUserAction(userId: Long, actionId: String) {
+        val scope = getUserActionsScope(userId)
+        deleteAction(scope, actionId)
     }
 
     override fun getIncomingActions(scope: String, lastSeen: String, count: Long, timeout: Long): List<Action> {
@@ -34,15 +42,6 @@ class ActionsServiceImpl(
         timeout: Long
     ): List<Action> {
         val scope = getUserActionsScope(userId)
-        return actionsRepository.getIncomingActions(scope, lastSeen, count, timeout)
-    }
-
-    override fun patchAction(scope: String, actionId: String, patch: PatchActionScheme) {
-        return actionsRepository.patchAction(scope, actionId, patch)
-    }
-
-    override fun patchUserAction(userId: Long, actionId: String, patch: PatchActionScheme) {
-        val scope = getUserActionsScope(userId)
-        return actionsRepository.patchAction(scope, actionId, patch)
+        return getIncomingActions(scope, lastSeen, count, timeout)
     }
 }

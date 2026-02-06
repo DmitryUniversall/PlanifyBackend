@@ -3,7 +3,6 @@ package com.planify.planifyspring.main.features.actions.domain.use_cases_impl
 import com.planify.planifyspring.core.exceptions.AlreadyInUseAppError
 import com.planify.planifyspring.main.exceptions.generics.AlreadyInUseHttpException
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
-import com.planify.planifyspring.main.features.actions.domain.schemas.PatchActionScheme
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.actions.domain.use_cases.ActionsUseCaseGroup
 import org.springframework.stereotype.Component
@@ -18,6 +17,14 @@ class ActionsUseCaseGroupImpl(
 
     override fun createUserAction(userId: Long, type: String, data: Any): Action {
         return actionsService.createUserAction(userId, type, data)
+    }
+
+    override fun deleteAction(scope: String, actionId: String) {
+        actionsService.deleteAction(scope, actionId)
+    }
+
+    override fun deleteUserAction(userId: Long, actionId: String) {
+        actionsService.deleteUserAction(userId, actionId)
     }
 
     override fun getIncomingActions(
@@ -35,13 +42,5 @@ class ActionsUseCaseGroupImpl(
         } catch (_: AlreadyInUseAppError) {
             throw AlreadyInUseHttpException("This customer is already reading actions")
         }
-    }
-
-    override fun patchAction(scope: String, actionId: String, patch: PatchActionScheme) {
-        return actionsService.patchAction(scope, actionId, patch)
-    }
-
-    override fun patchUserAction(userId: Long, actionId: String, patch: PatchActionScheme) {
-        return actionsService.patchUserAction(userId, actionId, patch)
     }
 }

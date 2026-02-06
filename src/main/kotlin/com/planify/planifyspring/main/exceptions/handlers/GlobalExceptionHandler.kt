@@ -1,6 +1,8 @@
 package com.planify.planifyspring.main.exceptions.handlers
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
 import com.planify.planifyspring.core.exceptions.ApplicationException
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
@@ -19,6 +21,8 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.NoHandlerFoundException
 
+
+@Suppress("unused")
 @RestControllerAdvice
 class GlobalExceptionHandler {  // TODO: Split this into different handlers
     companion object {
@@ -43,7 +47,10 @@ class GlobalExceptionHandler {  // TODO: Split this into different handlers
     private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(Exception::class)
-    fun handleException(e: Exception, request: WebRequest): ResponseEntity<ApplicationResponse<Nothing>> {
+    fun handleException(
+        e: Exception,
+        request: WebRequest
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
         logger.error("Unexpected error occurred", e)
 
         return buildErrorResponse(
@@ -60,20 +67,35 @@ class GlobalExceptionHandler {  // TODO: Split this into different handlers
         request: WebRequest
     ): ResponseEntity<ApplicationResponse<Nothing>> {
         val cause = e.cause
-        return if (cause is InvalidFormatException) {
-            buildErrorResponse(
-                error = cause,
-                status = HttpStatus.BAD_REQUEST,
-                appCode = 2003,
-                message = "Bad request payload format: failed to parse"
-            )
-        } else {
-            buildErrorResponse(
-                error = e,
-                status = HttpStatus.BAD_REQUEST,
-                appCode = 2003,
-                message = "Bad request payload"
-            )
+
+        return when (cause) {
+            is InvalidFormatException -> {
+                buildErrorResponse(
+                    error = cause,
+                    status = HttpStatus.BAD_REQUEST,
+                    appCode = 2003,
+                    message = "Bad request payload format: failed to parse"
+                )
+            }
+
+            is MismatchedInputException, is ValueInstantiationException -> {
+                val fields = cause.path.mapNotNull { it.fieldName }.joinToString(", ")
+                buildErrorResponse(
+                    error = cause,
+                    status = HttpStatus.BAD_REQUEST,
+                    appCode = 2003,
+                    message = "Bad request payload: invalid fields: $fields"
+                )
+            }
+
+            else -> {
+                buildErrorResponse(
+                    error = e,
+                    status = HttpStatus.BAD_REQUEST,
+                    appCode = 2003,
+                    message = "Bad request payload"
+                )
+            }
         }
     }
 
@@ -135,7 +157,7 @@ class GlobalExceptionHandler {  // TODO: Split this into different handlers
         )
     }
 
-        @ExceptionHandler(MethodArgumentNotValidException::class)
+    @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ApplicationResponse<Nothing>> {
         return buildErrorResponse(
             error = e,

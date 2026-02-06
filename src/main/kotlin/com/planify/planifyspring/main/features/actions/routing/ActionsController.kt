@@ -2,7 +2,6 @@ package com.planify.planifyspring.main.features.actions.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
-import com.planify.planifyspring.main.features.actions.domain.schemas.PatchActionScheme
 import com.planify.planifyspring.main.features.actions.domain.use_cases.ActionsUseCaseGroup
 import com.planify.planifyspring.main.features.actions.routing.dto.ActionDTO
 import com.planify.planifyspring.main.features.actions.routing.dto.get_my_incomming_actions.GetMyIncomingActionsResponseDTO
@@ -38,17 +37,14 @@ class ActionsController(
         )
     }
 
-    @DeleteMapping("/{actionId}/checked")
-    fun setActionChecked(
+    @DeleteMapping("/my/{actionId}")
+    fun deleteAction(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable actionId: String,
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        actionsUseCaseGroup.patchUserAction(
+        actionsUseCaseGroup.deleteUserAction(
             userId = authContext.user.id,
-            actionId = actionId,
-            patch = PatchActionScheme(
-                checked = true
-            )
+            actionId = actionId
         )
 
         return ResponseEntity.ok(ApplicationResponse.success())

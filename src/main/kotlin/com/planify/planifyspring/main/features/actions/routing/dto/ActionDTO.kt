@@ -4,7 +4,6 @@ import com.planify.planifyspring.main.features.actions.domain.entities.Action
 
 data class ActionDTO(
     val id: String,
-    val checked: Boolean,
     val type: String,
     val data: Any?
 ) {
@@ -12,7 +11,6 @@ data class ActionDTO(
         fun fromEntity(entity: Action): ActionDTO {
             return ActionDTO(
                 id = entity.id,
-                checked = entity.checked,
                 type = entity.type,
                 data = entity.data
             )

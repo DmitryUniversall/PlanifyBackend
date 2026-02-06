@@ -72,6 +72,10 @@ class RedisHelper(
         return stringRedisTemplate.opsForStream<String, String>().add(key, objectMapperHelper.convertToStringsMap(value))
     }
 
+    fun deleteFromStream(key: String, recordId: RecordId) {
+        stringRedisTemplate.opsForStream<String, String>().delete(key, recordId)
+    }
+
     fun <T : Any> readStream(
         key: String,
         offset: ReadOffset,
