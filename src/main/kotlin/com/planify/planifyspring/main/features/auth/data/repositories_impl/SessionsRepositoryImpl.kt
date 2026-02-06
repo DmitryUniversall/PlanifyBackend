@@ -35,8 +35,9 @@ class SessionsRepositoryImpl(
         userId: Long,
         userAgent: String,
         sessionName: String,
+        clientName: String,
         accessTokenUuid: String,
-        refreshTokenUuid: String
+        refreshTokenUuid: String,
     ): AuthSession {
         val session = AuthSession(
             uuid = generateSessionUuid(),
@@ -47,7 +48,8 @@ class SessionsRepositoryImpl(
             userAgent = userAgent,
             createdAt = Instant.now(),
             lastUsedAt = Instant.now(),
-            expiresAt = SecurityHelper.calculateSessionExpiresAt()
+            expiresAt = SecurityHelper.calculateSessionExpiresAt(),
+            clientName = clientName
         )
 
         writeSession(session)
@@ -84,7 +86,7 @@ class SessionsRepositoryImpl(
         }
     }
 
-    override fun <T: Any> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>) {
+    override fun <T : Any> updateSession(userId: Long, sessionUuid: String, set: Pair<String, T>) {
         helper.hsetField(
             key = getUserSessionKey(userId, sessionUuid),
             field = set.first,

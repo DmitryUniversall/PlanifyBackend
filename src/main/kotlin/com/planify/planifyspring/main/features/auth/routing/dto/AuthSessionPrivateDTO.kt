@@ -7,6 +7,7 @@ data class AuthSessionPrivateDTO(
     val uuid: String,
     val name: String,
     val userId: Long,
+    val clientName: String,
     val isActive: Boolean = true,
     val createdAt: Instant,
     val lastUsedAt: Instant,
@@ -21,7 +22,8 @@ data class AuthSessionPrivateDTO(
                 isActive = entity.active,
                 createdAt = entity.createdAt,
                 lastUsedAt = entity.lastUsedAt,
-                expiresAt = entity.expiresAt
+                expiresAt = entity.expiresAt,
+                clientName = entity.clientName
             )
         }
     }

@@ -1,70 +1,76 @@
 package com.planify.planifyspring.main.features.actions.data.repositories
 
-import com.planify.planifyspring.core.exceptions.AlreadyInUseAppError
 import com.planify.planifyspring.main.common.utils.redis.RedisHelper
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
+import com.planify.planifyspring.main.features.actions.domain.schemas.PatchActionScheme
 import org.springframework.data.redis.connection.stream.ReadOffset
 import org.springframework.stereotype.Repository
 import java.util.*
-import java.util.concurrent.locks.ReentrantLock
 
 @Repository
 class ActionsRepositoryImpl(
     val redisHelper: RedisHelper
 ) : ActionsRepository {
-    private val actionsReadLocks: MutableMap<String, ReentrantLock> = mutableMapOf()
-
     private fun generateActionUuid(): String {
         return UUID.randomUUID().toString()
     }
 
-    private fun getActionScopeKey(scope: String): String {
-        return "actions:scope:$scope"
+    private fun getActionScopeStreamKey(scope: String): String {
+        return "actions:scope:$scope:stream"
     }
 
-    private fun getLockForConsumer(streamKey: String, group: String, consumer: String): ReentrantLock {
-        return actionsReadLocks.getOrPut("lock:$streamKey:$group:$consumer") { ReentrantLock() }
+    private fun getActionScopeKey(scope: String, actionId: String): String {
+        return "actions:scope:$scope:actions:$actionId"
+    }
+
+    private fun getActionId(actionUuid: String, recordId: String): String {
+        return "${actionUuid}==${recordId}"
+    }
+
+    private fun getAction(actionId: String): Action? {
+        return redisHelper.hget(actionId, Action::class.java)
     }
 
     override fun createAction(scope: String, type: String, data: Any): Action {
+        val actionUuid = generateActionUuid()
+
+        val streamKey = getActionScopeStreamKey(scope)
+        val recordId = redisHelper.addToStream(streamKey, actionUuid)
+
         val action = Action(
-            uuid = generateActionUuid(),
+            id = getActionId(actionUuid, recordId.value),
             type = type,
             data = data
         )
 
-        redisHelper.addToStream(getActionScopeKey(scope), action)
+        val actionKey = getActionScopeKey(scope, action.id)
+        redisHelper.hset(actionKey, action)
+
         return action
     }
 
     override fun getIncomingActions(
         scope: String,
-        group: String,
-        consumer: String,
+        lastSeen: String,
         count: Long,
         timeout: Long
     ): List<Action> {
-        val streamKey = getActionScopeKey(scope)
+        val streamKey = getActionScopeStreamKey(scope)  // TODO: Async lock and wait
 
-        redisHelper.createStreamGroup(streamKey, group, ReadOffset.from("0"))
-
-        val lock = getLockForConsumer(streamKey, group, consumer)
-
-        if (!lock.tryLock()) throw AlreadyInUseAppError("Consumer is already reading stream")  // TODO: Release on request cancel
-
-        return try {
-            redisHelper.readAsConsumer(
-                key = streamKey,
-                group = group,
-                consumer = consumer,
-                offset = ReadOffset.lastConsumed(),
-                count = count,
-                timeout = timeout,
-                clazz = Action::class.java
-            )
-        } finally {
-            lock.unlock()
+        return redisHelper.readStream(
+            key = streamKey,
+            offset = ReadOffset.lastConsumed(),
+            count = count,
+            timeout = timeout,
+            clazz = String::class.java,
+        ).mapNotNull {  // TODO: Ignore nulls?
+            getAction(getActionId(it.second, it.first.value))
         }
+    }
+
+    override fun patchAction(scope: String, actionId: String, patch: PatchActionScheme) {
+        val streamKey = getActionScopeKey(scope, actionId)
+        patch.checked?.let { redisHelper.hsetField(streamKey, "checked", it) }
     }
 }

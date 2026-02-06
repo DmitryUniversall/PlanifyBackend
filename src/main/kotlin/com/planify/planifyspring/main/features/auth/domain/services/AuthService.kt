@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable
 interface AuthService {
     fun decodeJwtToken(token: String): AuthTokenPayload
 
-    fun startSession(userId: Long, userAgent: String, sessionName: String): Pair<AuthSession, AuthTokenPair>
+    fun startSession(userId: Long, userAgent: String, sessionName: String, clientName: String): Pair<AuthSession, AuthTokenPair>
 
     fun getSession(userId: Long, sessionUuid: String): AuthSession
 

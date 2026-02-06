@@ -1,6 +1,5 @@
 package com.planify.planifyspring.main.features.auth.routing
 
-import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
@@ -34,7 +33,7 @@ class AuthFeatureController(
             email = body.email,
             passwordRaw = body.password,
             userAgent = userAgent,
-            sessionName = "${userAgent}-${getRandomString(8)}"
+            clientName = body.clientName
         )
 
         return ResponseEntity.ok(
@@ -57,7 +56,7 @@ class AuthFeatureController(
             username = body.username,
             passwordRaw = body.password,
             userAgent = userAgent,
-            sessionName = "${userAgent}-${getRandomString(8)}",
+            clientName = body.clientName,
             createProfileSchema = CreateProfileSchema(
                 firstName = body.firstName,
                 lastName = body.lastName,

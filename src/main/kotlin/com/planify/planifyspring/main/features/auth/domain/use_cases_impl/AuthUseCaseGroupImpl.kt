@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.auth.domain.use_cases_impl
 
 import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
+import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.exceptions.generics.AlreadyExistsHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
@@ -25,6 +26,10 @@ class AuthUseCaseGroupImpl(
     private val authService: AuthService
 ) : AuthUseCaseGroup {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+    private fun generateDefaultSessionName(clientName: String, userAgent: String): String {
+        return "${clientName}-${userAgent}-${getRandomString(8)}"
+    }
 
     private fun decodeJwtToken(token: String): AuthTokenPayload {
         try {
@@ -55,10 +60,12 @@ class AuthUseCaseGroupImpl(
         return payload
     }
 
+    @Suppress("unused")
     private fun isSuspiciousActivity(session: AuthSession, currentUserAgent: String): Boolean {
         return false  // TODO
     }
 
+    @Suppress("unused")
     private fun handleSuspiciousActivity(session: AuthSession, currentUserAgent: String) {
         // TODO
     }
@@ -111,14 +118,16 @@ class AuthUseCaseGroupImpl(
         email: String,
         passwordRaw: String,
         userAgent: String,
-        sessionName: String
+        clientName: String,
+        sessionName: String?,
     ): Pair<AuthContext, AuthTokenPair> {
         val (user, accessInfo) = getUserByCredentialsWithAccessInfo(email, passwordRaw)
 
         val (session, tokens) = authService.startSession(
             userId = user.id,
             userAgent = userAgent,
-            sessionName = sessionName
+            sessionName = sessionName ?: generateDefaultSessionName(clientName, userAgent),
+            clientName = clientName
         )
 
         return AuthContext(
@@ -133,14 +142,16 @@ class AuthUseCaseGroupImpl(
         email: String,
         passwordRaw: String,
         userAgent: String,
-        sessionName: String,
-        createProfileSchema: CreateProfileSchema
+        clientName: String,
+        createProfileSchema: CreateProfileSchema,
+        sessionName: String?
     ): Pair<AuthContext, AuthTokenPair> {
         val user = createUser(username, email, passwordRaw, createProfileSchema)
         val (session, tokens) = authService.startSession(
             userId = user.id,
             userAgent = userAgent,
-            sessionName = sessionName
+            sessionName = sessionName ?: generateDefaultSessionName(clientName, userAgent),
+            clientName = clientName
         )
 
         return AuthContext(

@@ -22,7 +22,8 @@ interface AuthUseCaseGroup {
         email: String,
         passwordRaw: String,
         userAgent: String,
-        sessionName: String
+        clientName: String,
+        sessionName: String? = null
     ): Pair<AuthContext, AuthTokenPair>
 
     fun register(
@@ -30,8 +31,9 @@ interface AuthUseCaseGroup {
         email: String,
         passwordRaw: String,
         userAgent: String,
-        sessionName: String,
-        createProfileSchema: CreateProfileSchema
+        clientName: String,
+        createProfileSchema: CreateProfileSchema,
+        sessionName: String? = null
     ): Pair<AuthContext, AuthTokenPair>
 
     fun createUser(

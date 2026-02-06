@@ -44,6 +44,7 @@ class AuthServiceImpl(
         userId: Long,
         userAgent: String,
         sessionName: String,
+        clientName: String,
         accessTokenUuid: String,
         refreshTokenUuid: String
     ): AuthSession {
@@ -53,6 +54,7 @@ class AuthServiceImpl(
             sessionName = sessionName,
             accessTokenUuid = accessTokenUuid,
             refreshTokenUuid = refreshTokenUuid,
+            clientName = clientName
         ).also {
             val cache = JsonCacheWrapper(cacheManager.getCache("sessions")!!, objectMapper)
             cache.put("${it.userId}-${it.uuid}", it)
@@ -62,7 +64,8 @@ class AuthServiceImpl(
     override fun startSession(
         userId: Long,
         userAgent: String,
-        sessionName: String
+        sessionName: String,
+        clientName: String
     ): Pair<AuthSession, AuthTokenPair> {
 
         val newAccessTokenUuid = generateTokenUuid()
@@ -74,6 +77,7 @@ class AuthServiceImpl(
             sessionName = sessionName,
             accessTokenUuid = newAccessTokenUuid,
             refreshTokenUuid = newRefreshTokenUuid,
+            clientName = clientName
         )
 
         return session to AuthTokenPair(

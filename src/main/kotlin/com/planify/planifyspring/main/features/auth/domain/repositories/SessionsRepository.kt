@@ -7,6 +7,7 @@ interface SessionsRepository {
         userId: Long,
         userAgent: String,
         sessionName: String,
+        clientName: String,
         accessTokenUuid: String,
         refreshTokenUuid: String
     ): AuthSession
