@@ -14,6 +14,8 @@ import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import java.security.SignatureException
 
@@ -168,6 +170,10 @@ class AuthUseCaseGroupImpl(
         } catch (_: NotFoundAppError) {
             throw NotFoundHttpException("User was not found")
         }
+    }
+
+    override fun getAllUsersPaginated(pageable: Pageable): Page<User> {
+        return authService.getAllUsersPaginated(pageable)
     }
 
     override fun getUserByCredentials(email: String, passwordRaw: String): User {

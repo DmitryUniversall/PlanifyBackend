@@ -32,7 +32,7 @@ class JWTAuthFilter(
 
         val authContext = authUseCaseGroup.authenticate(token)
 
-        val authorities = authContext.accessInfo.roles.map { SimpleGrantedAuthority("ROLE_${it.name}") } + authContext.accessInfo.authorities.map { SimpleGrantedAuthority(it.name) }
+        val authorities = authContext.accessInfo.roles.map { SimpleGrantedAuthority(it.name) } + authContext.accessInfo.authorities.map { SimpleGrantedAuthority(it.name) }
         val auth = UsernamePasswordAuthenticationToken(authContext, null, authorities)
 
         SecurityContextHolder.getContext().authentication = auth

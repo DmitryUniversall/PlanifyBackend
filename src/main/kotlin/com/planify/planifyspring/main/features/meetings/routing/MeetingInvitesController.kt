@@ -29,7 +29,7 @@ class MeetingInvitesController(
         val invite = meetingInviteUseCaseGroup.createInvite(
             meetingId = body.meetingId,
             senderId = authContext.user.id,
-            targetId = body.targetUserId
+            targetId = body.targetId
         )
 
         return ResponseEntity.ok(

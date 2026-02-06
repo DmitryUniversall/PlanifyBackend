@@ -9,6 +9,8 @@ import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRe
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import org.springframework.cache.CacheManager
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 
@@ -166,6 +168,10 @@ class AuthServiceImpl(
 
         val result = usersRepository.getByIdWithAccessInfo(id)
         return result ?: throw NotFoundAppError("User was not found")
+    }
+
+    override fun getAllUsersPaginated(pageable: Pageable): Page<User> {
+        return usersRepository.getAllUsersPaginated(pageable)
     }
 
     override fun getUserByCredentials(  // TODO: Cache?

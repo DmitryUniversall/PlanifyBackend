@@ -1,6 +1,11 @@
 package com.planify.planifyspring.main.features.auth.domain.use_cases
 
+import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.*
+import com.planify.planifyspring.main.features.auth.routing.dto.get_all_users.GetAllUsersResponseDTO
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
 
 interface AuthUseCaseGroup {
     fun authenticate(accessToken: String): AuthContext
@@ -38,6 +43,7 @@ interface AuthUseCaseGroup {
 
     fun getUserById(id: Long): User
     fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
+    fun getAllUsersPaginated(pageable: Pageable): Page<User>
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>

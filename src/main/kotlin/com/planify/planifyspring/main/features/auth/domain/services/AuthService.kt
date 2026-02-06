@@ -5,6 +5,8 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPayload
 import com.planify.planifyspring.main.features.auth.domain.entities.User
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 interface AuthService {
     fun decodeJwtToken(token: String): AuthTokenPayload
@@ -25,6 +27,7 @@ interface AuthService {
 
     fun getUserById(id: Long): User
     fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
+    fun getAllUsersPaginated(pageable: Pageable): Page<User>
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>

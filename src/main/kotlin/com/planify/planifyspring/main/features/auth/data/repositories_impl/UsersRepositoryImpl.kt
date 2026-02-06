@@ -7,6 +7,8 @@ import com.planify.planifyspring.main.features.auth.data.models.UserModel
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 
@@ -41,6 +43,10 @@ class UsersRepositoryImpl(
     override fun getByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>? {
         val model = userJpaRepository.findByIdWithRolesAndAuthorities(id) ?: return null
         return model.toEntity() to model.getAccessInfo()
+    }
+
+    override fun getAllUsersPaginated(pageable: Pageable): Page<User> {
+        return userJpaRepository.findAll(pageable).map { it.toEntity() }
     }
 
     override fun getByAuthCredentials(email: String, passwordRaw: String): User? {
