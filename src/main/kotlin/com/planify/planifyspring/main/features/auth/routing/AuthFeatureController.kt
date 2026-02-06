@@ -15,6 +15,7 @@ import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshR
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -49,7 +50,7 @@ class AuthFeatureController(
     @PostMapping("/register")
     fun register(
         @RequestHeader("User-Agent") userAgent: String,
-        @RequestBody body: RegisterRequestDTO
+        @Valid @RequestBody body: RegisterRequestDTO
     ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
         val (info, tokens) = authUseCaseGroup.register(
             email = body.email,

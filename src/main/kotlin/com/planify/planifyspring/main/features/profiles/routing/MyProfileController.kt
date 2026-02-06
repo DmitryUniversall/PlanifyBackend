@@ -10,6 +10,7 @@ import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.
 import com.planify.planifyspring.main.features.profiles.routing.dto.patch.PatchProfileRequestDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.search.SearchProfilesResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.update.UpdateProfileRequestDTO
+import jakarta.validation.Valid
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
@@ -37,7 +38,7 @@ class MyProfileController(
     @PatchMapping("/my")
     fun patchProfile(
         @AuthenticationPrincipal authContext: AuthContext,
-        @RequestBody body: PatchProfileRequestDTO
+        @Valid @RequestBody body: PatchProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
         profilesUseCaseGroup.patchProfile(authContext.user.id, PatchProfileSchema(
             firstName = body.firstName,
