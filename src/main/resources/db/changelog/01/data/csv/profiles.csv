@@ -1,3 +1,3 @@
 user_id,first_name,last_name,position,department,profile_image_url
-1,Admin,Admin,Senior Admin,Admin department,admin image
-2,User,User,Just User,User department,user image
+1,Admin,Admin,Senior Admin,Admin department,https://dummyimage.com/512x512/ffae00/000000.png
+2,User,User,Just User,User department,https://dummyimage.com/512x512/ffae00/000000.png

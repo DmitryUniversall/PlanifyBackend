@@ -38,7 +38,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:$meetingId",
-            type = "meetings:invited",
+            type = "meetings:meeting:invited",
             data = MeetingActionUserInvitedSchema(
                 senderId = senderId,
                 targetId = meetingId,
@@ -85,7 +85,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:${invite.meetingId}",
-            type = "meetings:invite_status_updated",
+            type = "meetings:meeting:invite_status_updated",
             data = MeetingActionInviteStatusUpdatedSchema(
                 meetingId = invite.meetingId,
                 senderId = invite.senderId,
@@ -99,7 +99,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:${invite.meetingId}",
-            type = "meetings:new_participant",
+            type = "meetings:meeting:new_participant",
             data = MeetingActionNewParticipantSchema(
                 meetingId = invite.meetingId,
                 newParticipantId = invite.targetId,
@@ -136,7 +136,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:${invite.meetingId}",
-            type = "meetings:invite_status_updated",
+            type = "meetings:meeting:invite_status_updated",
             data = MeetingActionInviteStatusUpdatedSchema(
                 meetingId = invite.meetingId,
                 senderId = invite.senderId,
@@ -179,7 +179,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:${invite.meetingId}",
-            type = "meetings:invite_reschedule_requested",
+            type = "meetings:meeting:invite_reschedule_requested",
             data = MeetingActionInviteRescheduleRequestedSchema(
                 meetingId = invite.meetingId,
                 senderId = invite.senderId,
@@ -224,7 +224,7 @@ class MeetingInvitesServiceImpl(
 
         actionsService.createAction(
             scope = "meeting:${invite.meetingId}",
-            type = "meetings:invite_reschedule_responded",
+            type = "meetings:meeting:invite_reschedule_responded",
             data = MeetingActionInviteRescheduleRespondedSchema(
                 meetingId = invite.meetingId,
                 senderId = invite.senderId,

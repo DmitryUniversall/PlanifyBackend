@@ -37,10 +37,23 @@ class ActionsUseCaseGroupImpl(
     }
 
     override fun getUserIncomingActions(userId: Long, lastSeen: String, count: Long, timeout: Long): List<Action> {
-        try {
-            return actionsService.getUserIncomingActions(userId, lastSeen, count, timeout)
+        return try {
+            if (lastSeen.contains("===")) {
+                getUserIncomingActionsUsingLastSeenId(userId, lastSeen, count, timeout)
+            } else {
+                actionsService.getUserIncomingActionsUsingRecordId(userId, lastSeen, count, timeout)
+            }
         } catch (_: AlreadyInUseAppError) {
             throw AlreadyInUseHttpException("This customer is already reading actions")
         }
+    }
+
+    override fun getUserIncomingActionsUsingLastSeenId(
+        userId: Long,
+        actionId: String,
+        count: Long,
+        timeout: Long
+    ): List<Action> {
+        return actionsService.getUserIncomingActionsUsingLastSeenId(userId, actionId, count, timeout)
     }
 }

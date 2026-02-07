@@ -10,8 +10,8 @@ data class RegisterRequestDTO(
     val clientName: String,
     val firstName: String,
     val lastName: String,
-    val position: String?,
-    val department: String?,
+    val position: String? = null,
+    val department: String? = null,
 
     @field:NotBlank
     @field:URL(

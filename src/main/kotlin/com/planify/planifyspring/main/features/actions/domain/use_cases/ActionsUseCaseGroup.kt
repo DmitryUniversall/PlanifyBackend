@@ -11,4 +11,5 @@ interface ActionsUseCaseGroup {
 
     fun getIncomingActions(scope: String, lastSeen: String, count: Long, timeout: Long): List<Action>
     fun getUserIncomingActions(userId: Long, lastSeen: String, count: Long, timeout: Long): List<Action>
+    fun getUserIncomingActionsUsingLastSeenId(userId: Long, actionId: String, count: Long, timeout: Long): List<Action>
 }

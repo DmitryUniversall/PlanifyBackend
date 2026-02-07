@@ -22,7 +22,7 @@ class ActionsRepositoryImpl(
     }
 
     private fun getActionId(actionUuid: String, recordId: String): String {
-        return "${actionUuid}==${recordId}"
+        return "${actionUuid}===${recordId}"
     }
 
     override fun createAction(scope: String, type: String, data: Any): Action {
@@ -45,7 +45,7 @@ class ActionsRepositoryImpl(
     override fun deleteAction(scope: String, actionId: String) {
         val streamKey = getActionScopeStreamKey(scope)
 
-        val idParts = actionId.split("==")
+        val idParts = actionId.split("===")
         if (idParts.size != 2) throw InvalidArgumentAppError("Invalid action id: $actionId")
 
         redisHelper.deleteFromStream(streamKey, RecordId.of(idParts[1]))

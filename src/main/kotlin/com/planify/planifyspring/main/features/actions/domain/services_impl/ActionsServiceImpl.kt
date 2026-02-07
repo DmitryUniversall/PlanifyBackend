@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.actions.domain.services_impl
 
+import com.planify.planifyspring.core.exceptions.InvalidArgumentAppError
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
@@ -35,7 +36,7 @@ class ActionsServiceImpl(
         return actionsRepository.getIncomingActions(scope, lastSeen, count, timeout)
     }
 
-    override fun getUserIncomingActions(
+    override fun getUserIncomingActionsUsingRecordId(
         userId: Long,
         lastSeen: String,
         count: Long,
@@ -43,5 +44,18 @@ class ActionsServiceImpl(
     ): List<Action> {
         val scope = getUserActionsScope(userId)
         return getIncomingActions(scope, lastSeen, count, timeout)
+    }
+
+    override fun getUserIncomingActionsUsingLastSeenId(
+        userId: Long,
+        actionId: String,
+        count: Long,
+        timeout: Long
+    ): List<Action> {
+        val idParts = actionId.split("==")
+        if (idParts.size != 2) throw InvalidArgumentAppError("Invalid action id: $actionId")
+
+        val scope = getUserActionsScope(userId)
+        return getIncomingActions(scope, idParts[1], count, timeout)
     }
 }
