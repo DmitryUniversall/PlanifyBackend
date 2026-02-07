@@ -25,7 +25,7 @@ class MeetingInvitesRepositoryImpl(
         return "meetings:$meetingId:invites"
     }
 
-    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite {
+    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long, expiresAt: Instant): MeetingInvite {
         val invite = MeetingInvite(
             uuid = generateInviteUuid(),
             meetingId = meetingId,
@@ -33,10 +33,12 @@ class MeetingInvitesRepositoryImpl(
             targetId = targetId,
             status = MeetingInviteStatus.PENDING,
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
+            expiresAt = expiresAt
         )
 
         redisHelper.hset(getInviteKey(invite.uuid), invite)
+
         redisHelper.addToSet(getMeetingInvitesKey(meetingId), invite.uuid)  // Save for faster lookup
         return invite
     }

@@ -6,6 +6,7 @@ import java.time.Instant
 class UserActionInviteStatusUpdatedSchema(
     val oldStatus: MeetingInviteStatus,
     val newStatus: MeetingInviteStatus,
+
     val meetingId: Long,
     val senderId: Long,
     val targetId: Long,

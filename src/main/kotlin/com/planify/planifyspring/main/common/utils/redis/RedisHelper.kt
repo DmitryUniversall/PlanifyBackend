@@ -12,6 +12,10 @@ class RedisHelper(
     private val stringRedisTemplate: StringRedisTemplate,
     private val objectMapperHelper: ObjectMapperHelper
 ) {
+    fun expire(key: String, ttl: Duration) {
+        stringRedisTemplate.expire(key, ttl)
+    }
+
     fun <T : Any> hsetField(key: String, field: String, value: T) {
         val jsonSting = objectMapperHelper.convertToString(value)
         stringRedisTemplate.opsForHash<String, String>().put(key, field, jsonSting)
@@ -22,8 +26,8 @@ class RedisHelper(
     }
 
     fun <T : Any> hset(key: String, value: T) {
-        val hash = objectMapperHelper.convertToStringsMap(value)
-        stringRedisTemplate.opsForHash<String, String>().putAll(key, hash)
+        val data = objectMapperHelper.convertToStringsMap(value)
+        stringRedisTemplate.opsForHash<String, String>().putAll(key, data)
     }
 
     fun <T : Any> hget(key: String, clazz: Class<T>): T? {

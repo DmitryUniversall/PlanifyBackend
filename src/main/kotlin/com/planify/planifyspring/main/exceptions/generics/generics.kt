@@ -65,3 +65,12 @@ open class AlreadyInUseHttpException(
     appCode = appCode,
     message = message
 )
+
+open class ExpiredHttpException(
+    message: String?,
+    appCode: Int = 2012
+) : ApplicationHttpException(
+    httpStatus = HttpStatus.NOT_FOUND,
+    appCode = appCode,
+    message = message
+)

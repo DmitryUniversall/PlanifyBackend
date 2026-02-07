@@ -7,6 +7,5 @@ data class CreateMeetingRequestDTO(
     val description: String,
     val location: String,
     val startsAt: Instant,
-    val duration: Int,
-    val inviteUserIds: List<Long>?
+    val duration: Int
 )

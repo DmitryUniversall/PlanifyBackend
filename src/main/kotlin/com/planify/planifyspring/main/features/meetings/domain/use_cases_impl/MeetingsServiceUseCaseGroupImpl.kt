@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.features.meetings.domain.use_cases_impl
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.core.utils.atStartOfAnHour
 import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
+import com.planify.planifyspring.main.exceptions.generics.ForbiddenHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
@@ -28,6 +29,8 @@ class MeetingsServiceUseCaseGroupImpl(
     ): Meeting {
         val start = startsAt.atStartOfAnHour()
         val end = start.plusSeconds(duration * 3600L)
+
+        if (start < Instant.now()) throw BadRequestHttpException("Cannot create meeting in the past")
 
         if (meetingsService.userHasMeetingsBetween(userId = creatorId, startAt = start, endAt = end)) throw BadRequestHttpException("User already has meeting at this time interval")
         return meetingsService.createMeeting(creatorId, name, description, location, startsAt, duration)
@@ -86,7 +89,16 @@ class MeetingsServiceUseCaseGroupImpl(
         patch: MeetingPatchSchema,
         requesterId: Long
     ) {
-        // TODO: Check if updated is owner
+        val meeting: Meeting
+
+        try {
+            meeting = meetingsService.getMeetingById(meetingId)  // TODO: Optimize it via db request
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Cannot patch meeting: Meeting was not found")
+        }
+
+        if (meeting.ownerId != requesterId) throw ForbiddenHttpException("Cannot patch meeting: you are not the owner")
+
         return meetingsService.patchMeeting(meetingId, patch)
     }
 

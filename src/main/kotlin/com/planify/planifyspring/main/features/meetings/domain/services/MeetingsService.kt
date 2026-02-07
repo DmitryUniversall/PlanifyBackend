@@ -42,7 +42,6 @@ interface MeetingsService {
         userId: Long
     ): MeetingParticipant
 
-
     fun rescheduleMeeting(
         meetingId: Long,
         rescheduleTo: Instant

@@ -4,7 +4,7 @@ import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingI
 import java.time.Instant
 
 interface MeetingInvitesService {
-    fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite
+    fun createInvite(meetingId: Long, senderId: Long, targetId: Long, expiresAt: Instant): MeetingInvite
 
     fun getInvite(inviteUuid: String): MeetingInvite
 

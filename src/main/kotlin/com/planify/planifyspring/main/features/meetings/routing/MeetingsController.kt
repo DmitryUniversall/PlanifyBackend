@@ -49,16 +49,6 @@ class MeetingsController(
             duration = body.duration
         )
 
-        body.inviteUserIds?.let { userIds ->
-            userIds.forEach {
-                meetingInvitesUseCaseGroup.createInvite(
-                    meetingId = meeting.id,
-                    senderId = authContext.user.id,
-                    targetId = it
-                )
-            }
-        }
-
         return ResponseEntity.ok(
             CreateMeetingResponseDTO(
                 meeting = MeetingDTO.fromEntity(meeting)
@@ -103,6 +93,10 @@ class MeetingsController(
             ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it))  // TODO: Optimise it via db query
         }
 
+        val invitedUserProfiles = invites.map {
+            ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it.targetId))
+        }
+
         val meeting = MeetingDTO.fromEntity(meetingWithParticipantIds.meeting)
 
         return ResponseEntity.ok(
@@ -110,7 +104,8 @@ class MeetingsController(
                 meetingContext = MeetingContextDTO(
                     participantProfiles = participantProfiles,
                     invites = invites,
-                    meeting = meeting
+                    meeting = meeting,
+                    invitedUserProfiles = invitedUserProfiles
                 )
             ).asSuccessApplicationResponse()
         )
@@ -181,11 +176,16 @@ class MeetingsController(
                             ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it))  // TODO: Optimise it via db query
                         }
 
+                        val invitedUserProfiles = invites.map {
+                            ProfileDTO.fromEntity(profileUseCaseGroup.getProfileById(it.targetId))
+                        }
+
                         val meeting = MeetingDTO.fromEntity(meeting)
                         MeetingContextDTO(
                             participantProfiles = participantProfiles,
                             invites = invites,
-                            meeting = meeting
+                            meeting = meeting,
+                            invitedUserProfiles = invitedUserProfiles
                         )
                     }
                 }

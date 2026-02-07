@@ -21,9 +21,9 @@ class MeetingInvitesServiceImpl(
     val meetingService: MeetingsService,
     val objectMapperHelper: ObjectMapperHelper
 ) : MeetingInvitesService {
-    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite {
-        val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId)
-
+    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long, expiresAt: Instant): MeetingInvite {
+        val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId, expiresAt)
+    
         actionsService.createUserAction(
             userId = targetId,
             type = "meetings:invited",

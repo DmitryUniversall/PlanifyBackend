@@ -10,5 +10,6 @@ data class MeetingInvite(
     val status: MeetingInviteStatus,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val expiresAt: Instant,
     val statusData: Any? = null
 )
