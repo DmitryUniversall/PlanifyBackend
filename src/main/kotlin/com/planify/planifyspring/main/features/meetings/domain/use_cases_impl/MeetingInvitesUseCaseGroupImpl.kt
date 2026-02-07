@@ -75,7 +75,7 @@ class MeetingInvitesUseCaseGroupImpl(
         return createInvite(meeting, senderId, targetId)
     }
 
-    private fun acceptInvite(invite: MeetingInvite, requesterId: Long) {
+    private fun acceptInvite(invite: MeetingInvite, meeting: Meeting, requesterId: Long) {
         if (invite.targetId != requesterId) throw ForbiddenHttpException("Cannot accept invite: you are not target of this invite")
 
         if (
@@ -84,13 +84,29 @@ class MeetingInvitesUseCaseGroupImpl(
         ) throw BadRequestHttpException("Cannot accept invite: Invite has already been replied")
 
         if (invite.expiresAt < Instant.now()) throw BadRequestHttpException("Cannot accept invite: invite is expired")
+        if (
+            meetingsService.userHasMeetingsBetween(
+                userId = invite.targetId,
+                startAt = meeting.startsAt,
+                endAt = meeting.startsAt.plusSeconds(meeting.duration * 3600L)
+            )
+        ) throw BadRequestHttpException("User already has meeting at this time interval")
 
         meetingInvitesService.acceptInvite(invite)
     }
 
     override fun acceptInvite(inviteUuid: String, requesterId: Long) {
         val invite = getInvite(inviteUuid, requesterId)
-        acceptInvite(invite, requesterId)
+
+        val meeting: Meeting
+
+        try {
+            meeting = meetingsService.getMeetingById(invite.meetingId)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Cannot invite user: Meeting was not found")
+        }
+
+        acceptInvite(invite, meeting, requesterId)
     }
 
     private fun rejectInvite(invite: MeetingInvite, requesterId: Long) {

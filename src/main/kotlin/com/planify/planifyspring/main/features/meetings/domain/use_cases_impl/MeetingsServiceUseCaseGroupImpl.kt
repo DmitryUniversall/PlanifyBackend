@@ -98,6 +98,7 @@ class MeetingsServiceUseCaseGroupImpl(
         }
 
         if (meeting.ownerId != requesterId) throw ForbiddenHttpException("Cannot patch meeting: you are not the owner")
+        if (meeting.startsAt < Instant.now()) throw BadRequestHttpException("Cannot reschedule meeting to the past")
 
         return meetingsService.patchMeeting(meetingId, patch)
     }
