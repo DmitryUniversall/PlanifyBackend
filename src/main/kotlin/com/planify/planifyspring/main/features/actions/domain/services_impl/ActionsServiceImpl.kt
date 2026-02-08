@@ -52,7 +52,7 @@ class ActionsServiceImpl(
         count: Long,
         timeout: Long
     ): List<Action> {
-        val idParts = actionId.split("==")
+        val idParts = actionId.split("===")
         if (idParts.size != 2) throw InvalidArgumentAppError("Invalid action id: $actionId")
 
         val scope = getUserActionsScope(userId)
