@@ -1,6 +1,5 @@
 package com.planify.planifyspring.main.features.auth.routing.dto.register
 
-import jakarta.validation.constraints.NotBlank
 import org.hibernate.validator.constraints.URL
 
 data class RegisterRequestDTO(
@@ -13,7 +12,6 @@ data class RegisterRequestDTO(
     val position: String? = null,
     val department: String? = null,
 
-    @field:NotBlank
     @field:URL(
         protocol = "https",
         message = "Profile URL must be a valid HTTPS URL"

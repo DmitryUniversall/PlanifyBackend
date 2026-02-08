@@ -25,21 +25,17 @@ interface MeetingParticipantJpaRepository : JpaRepository<MeetingParticipantMode
     )
     fun getMeetingWithParticipantIds(meetingId: Long): List<MeetingParticipantIdRecord>
 
-    @Query(  // TODO: Should i use JPQL here?
+    @Query(
         """
-            SELECT new com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord(
-                m,
-                mp.userId
-            )
-            FROM MeetingModel m
-            JOIN m.participants mp
-            WHERE m.id IN (
-                SELECT mp2.meeting.id
-                FROM MeetingParticipantModel mp2
-                WHERE mp2.userId = :userId
-            )
-            AND m.startsAt BETWEEN :startAt AND :endAt
-            ORDER BY m.startsAt, m.id
+        SELECT new com.planify.planifyspring.main.features.meetings.data.records.MeetingParticipantIdRecord(
+            m,
+            mp.userId
+        )
+        FROM MeetingModel m
+        JOIN m.participants mp
+        WHERE mp.userId = :userId
+          AND m.startsAt BETWEEN :startAt AND :endAt
+        ORDER BY m.startsAt, m.id
         """
     )
     fun getUserDailyMeetingsWithParticipantIds(userId: Long, startAt: Instant, endAt: Instant): List<MeetingParticipantIdRecord>
