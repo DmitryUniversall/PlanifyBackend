@@ -25,7 +25,7 @@ open class MeetingParticipantModel(
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "meeting_id", nullable = false)
-    val meeting: MeetingModel,
+    open val meeting: MeetingModel,
 
     @Column(name = "user_id", nullable = false)
     val userId: Long

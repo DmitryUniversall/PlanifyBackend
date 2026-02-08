@@ -26,7 +26,7 @@ open class UserModel(
         joinColumns = [JoinColumn(name = "role_id")],
         inverseJoinColumns = [JoinColumn(name = "user_id")]
     )
-    val roles: MutableSet<RoleModel> = mutableSetOf(),
+    open val roles: MutableSet<RoleModel> = mutableSetOf(),
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -34,7 +34,7 @@ open class UserModel(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "authority_id")]
     )
-    val authorities: MutableSet<AuthorityModel> = mutableSetOf(),
+    open val authorities: MutableSet<AuthorityModel> = mutableSetOf(),
 ) {
     companion object {
         fun fromEntity(entity: User): UserModel {

@@ -35,7 +35,7 @@ open class MeetingModel(
         cascade = [],
         orphanRemoval = false
     )
-    val participants: MutableSet<MeetingParticipantModel> = mutableSetOf()
+    open val participants: MutableSet<MeetingParticipantModel> = mutableSetOf()
 ) {
     fun toEntity(): Meeting = Meeting(
         id = id!!,

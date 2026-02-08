@@ -13,10 +13,10 @@ open class AuthorityModel(
     val name: String,
 
     @ManyToMany(mappedBy = "authorities")
-    val users: MutableSet<UserModel> = mutableSetOf(),
+    open val users: MutableSet<UserModel> = mutableSetOf(),
 
     @ManyToMany(mappedBy = "authorities")
-    val roles: MutableSet<RoleModel> = mutableSetOf(),
+    open val roles: MutableSet<RoleModel> = mutableSetOf(),
 ) {
     fun toEntity(): Authority {
         return Authority(
