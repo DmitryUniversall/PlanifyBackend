@@ -9,16 +9,16 @@ import jakarta.persistence.*
 open class UserModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    open val id: Long? = null,
 
     @Column(nullable = false, unique = true)
-    val username: String,
+    open val username: String,
 
     @Column(nullable = false, unique = true)
-    val email: String,
+    open val email: String,
 
     @Column(nullable = false)
-    val passwordHash: String,
+    open val passwordHash: String,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

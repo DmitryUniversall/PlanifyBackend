@@ -9,25 +9,25 @@ import java.time.Instant
 open class MeetingModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    open val id: Long? = null,
 
     @Column(nullable = false)
-    val ownerId: Long,
+    open val ownerId: Long,
 
     @Column(nullable = false)
-    val name: String,
+    open val name: String,
 
     @Column(nullable = false)
-    val startsAt: Instant,
+    open val startsAt: Instant,
 
     @Column(nullable = false)
-    val duration: Int,
+    open val duration: Int,
 
     @Column(nullable = true)
-    val description: String,
+    open val description: String,
 
     @Column(nullable = true)
-    val location: String,
+    open val location: String,
 
     @OneToMany(
         mappedBy = "meeting",

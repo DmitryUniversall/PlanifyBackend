@@ -8,9 +8,9 @@ import jakarta.persistence.*
 open class RoleModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    open val id: Long? = null,
 
-    val name: String,
+    open val name: String,
 
     @ManyToMany(mappedBy = "roles")
     open val users: MutableSet<UserModel> = mutableSetOf(),

@@ -21,14 +21,14 @@ import jakarta.persistence.*
 open class MeetingParticipantModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    open val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "meeting_id", nullable = false)
     open val meeting: MeetingModel,
 
     @Column(name = "user_id", nullable = false)
-    val userId: Long
+    open val userId: Long
 ) {
     fun toEntity(): MeetingParticipant {
         return MeetingParticipant(
