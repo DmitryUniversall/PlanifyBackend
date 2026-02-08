@@ -62,7 +62,7 @@ class MeetingsServiceUseCaseGroupImpl(
         meetingId: Long,
         requesterId: Long
     ): Meeting {
-        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
+//        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
 
         try {
             return meetingsService.getMeetingById(meetingId)
@@ -75,7 +75,7 @@ class MeetingsServiceUseCaseGroupImpl(
         meetingId: Long,
         requesterId: Long
     ): MeetingWithParticipantIds {
-        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
+//        if (!isUserParticipant(requesterId, meetingId)) throw BadRequestHttpException("Cannot get meeting info: user is not participant of this meeting")
         try {
             return meetingsService.getMeetingWithParticipantIds(meetingId)
         } catch (_: NotFoundAppError) {
