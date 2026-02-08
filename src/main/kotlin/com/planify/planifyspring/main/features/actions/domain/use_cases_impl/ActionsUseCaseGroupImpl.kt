@@ -1,8 +1,10 @@
 package com.planify.planifyspring.main.features.actions.domain.use_cases_impl
 
 import com.planify.planifyspring.core.exceptions.AlreadyInUseAppError
+import com.planify.planifyspring.core.exceptions.InvalidArgumentAppError
 import com.planify.planifyspring.main.exceptions.generics.AlreadyInUseHttpException
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
+import com.planify.planifyspring.main.features.actions.domain.exceptions.BadActionIdHttpException
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.actions.domain.use_cases.ActionsUseCaseGroup
 import org.springframework.stereotype.Component
@@ -20,11 +22,19 @@ class ActionsUseCaseGroupImpl(
     }
 
     override fun deleteAction(scope: String, actionId: String) {
-        actionsService.deleteAction(scope, actionId)
+        try {
+            actionsService.deleteAction(scope, actionId)
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid actionId specified: $actionId")
+        }
     }
 
     override fun deleteUserAction(userId: Long, actionId: String) {
-        actionsService.deleteUserAction(userId, actionId)
+        try {
+            actionsService.deleteUserAction(userId, actionId)
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid actionId specified: $actionId")
+        }
     }
 
     override fun getIncomingActions(
@@ -33,18 +43,30 @@ class ActionsUseCaseGroupImpl(
         count: Long,
         timeout: Long
     ): List<Action> {
-        return actionsService.getIncomingActions(scope, lastSeen, count, timeout)
+        try {
+            return actionsService.getIncomingActions(scope, lastSeen, count, timeout)
+        } catch (_: AlreadyInUseAppError) {
+            throw AlreadyInUseHttpException("This customer is already reading actions")
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid lastSeen action id specified: $lastSeen")
+        }
     }
 
     override fun getUserIncomingActions(userId: Long, lastSeen: String, count: Long, timeout: Long): List<Action> {
+        return if (lastSeen.contains("===")) {
+            getUserIncomingActionsUsingLastSeenId(userId, lastSeen, count, timeout)
+        } else {
+            getUserIncomingActionsUsingRecordId(userId, lastSeen, count, timeout)
+        }
+    }
+
+    override fun getUserIncomingActionsUsingRecordId(userId: Long, recordId: String, count: Long, timeout: Long): List<Action> {
         return try {
-            if (lastSeen.contains("===")) {
-                getUserIncomingActionsUsingLastSeenId(userId, lastSeen, count, timeout)
-            } else {
-                actionsService.getUserIncomingActionsUsingRecordId(userId, lastSeen, count, timeout)
-            }
+            actionsService.getUserIncomingActionsUsingRecordId(userId, recordId, count, timeout)
         } catch (_: AlreadyInUseAppError) {
             throw AlreadyInUseHttpException("This customer is already reading actions")
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid recordId specified: $recordId")
         }
     }
 
@@ -54,6 +76,12 @@ class ActionsUseCaseGroupImpl(
         count: Long,
         timeout: Long
     ): List<Action> {
-        return actionsService.getUserIncomingActionsUsingLastSeenId(userId, actionId, count, timeout)
+        return try {
+            actionsService.getUserIncomingActionsUsingLastSeenId(userId, actionId, count, timeout)
+        } catch (_: AlreadyInUseAppError) {
+            throw AlreadyInUseHttpException("This customer is already reading actions")
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid actionId specified: $actionId")
+        }
     }
 }
