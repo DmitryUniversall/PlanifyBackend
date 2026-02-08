@@ -28,18 +28,18 @@ class MeetingInvitesUseCaseGroupImpl(
             throw NotFoundHttpException("Invite was not found")
         }
 
-        if (
-            requesterId != invite.senderId &&
-            requesterId != invite.targetId &&
-            !meetingsService.isUserParticipant(requesterId, invite.meetingId)
-        ) throw ForbiddenHttpException("Cannot get invite info: you are not participant of this meeting")
+//        if (
+//            requesterId != invite.senderId &&
+//            requesterId != invite.targetId &&
+//            !meetingsService.isUserParticipant(requesterId, invite.meetingId)
+//        ) throw ForbiddenHttpException("Cannot get invite info: you are not participant of this meeting")
 
         return invite
     }
 
     override fun getMeetingInvites(meetingId: Long, requesterId: Long): List<MeetingInvite> {
         val invites = meetingInvitesService.getMeetingInvites(meetingId)
-        if (!meetingsService.isUserParticipant(requesterId, meetingId)) throw ForbiddenHttpException("Cannot get invites info: you are not participant of this meeting")
+//        if (!meetingsService.isUserParticipant(requesterId, meetingId)) throw ForbiddenHttpException("Cannot get invites info: you are not participant of this meeting")
 
         return invites
     }
