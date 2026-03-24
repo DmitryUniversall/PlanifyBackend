@@ -30,6 +30,7 @@ class ApplicationSecurityConfig(
             }
             .authorizeHttpRequests {
                 it.requestMatchers("/auth/login", "/auth/register", "/auth/refresh").permitAll()
+                it.requestMatchers("/tools/ping").permitAll()
                 it.requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
