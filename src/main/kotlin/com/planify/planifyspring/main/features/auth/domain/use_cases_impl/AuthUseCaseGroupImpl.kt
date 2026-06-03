@@ -7,6 +7,7 @@ import com.planify.planifyspring.main.exceptions.generics.AlreadyExistsHttpExcep
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
 import com.planify.planifyspring.main.features.auth.domain.events.ConfirmationEmailRequestedEvent
+import com.planify.planifyspring.main.features.auth.domain.events.RecoverPasswordEmailRequestedEvent
 import com.planify.planifyspring.main.features.auth.domain.exceptions.*
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
@@ -75,8 +76,40 @@ class AuthUseCaseGroupImpl(
         // TODO
     }
 
-    private fun generateConfirmationUUID(): String {
+    private fun generateRandomUUID(): String {
         return UUID.randomUUID().toString()
+    }
+
+    private fun getUserByEmail(email: String): User {
+        try {
+            return authService.getUserByEmail(email)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("User not found")
+        }
+    }
+
+    private fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge {
+        try {
+            return authService.getRecoverPasswordChallenge(challengeUUID)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Challenge not found")
+        }
+    }
+
+    private fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge) {
+        try {
+            return authService.saveRecoverPasswordChallenge(passwordRecoveryChallenge)
+        } catch (_: NotFoundAppError) {
+            throw NotFoundHttpException("Challenge not found")
+        }
+    }
+
+    private fun deleteRecoverPasswordChallenge(challengeUUID: String, userId: Long) {
+        authService.deleteRecoverPasswordChallenge(challengeUUID, userId)
+    }
+
+    fun getUserActiveRecoverPasswordChallenge(userId: Long): String? {
+        return authService.getUserActiveRecoverPasswordChallenge(userId)
     }
 
     override fun getSession(userId: Long, sessionUuid: String): AuthSession {
@@ -146,14 +179,14 @@ class AuthUseCaseGroupImpl(
         ) to tokens
     }
 
-    private fun generateConfirmationCode(): Int {
+    private fun generateRandomConfirmationCode(): Int {
         return (100000..999999).random()
     }
 
     private fun generateRegisterConfirmationInfo(userId: Long, email: String): RegisterConfirmationInfo {
         return RegisterConfirmationInfo(
-            uuid = generateConfirmationUUID(),
-            code = generateConfirmationCode(),
+            uuid = generateRandomUUID(),
+            code = generateRandomConfirmationCode(),
             userId = userId,
             email = email
         )
@@ -230,7 +263,7 @@ class AuthUseCaseGroupImpl(
         confirmationUuid: String,
     ) {
         val info = getRegisterConfirmationInfo(confirmationUuid)
-        val updatedInfo = info.copy(code = generateConfirmationCode())
+        val updatedInfo = info.copy(code = generateRandomConfirmationCode())
 
         saveRegisterConfirmationInfo(updatedInfo)
 
@@ -291,5 +324,72 @@ class AuthUseCaseGroupImpl(
 
     override fun getActiveUserSessions(userId: Long): List<AuthSession> {
         return authService.getActiveUserSessions(userId)
+    }
+
+
+    private fun sendRecoverPasswordEmail(email: String, code: Int) {
+        eventPublisher.publishEvent(
+            RecoverPasswordEmailRequestedEvent(email = email, code = code)
+        )
+    }
+
+    private fun generateRecoverPasswordChallenge(userId: Long, email: String): PasswordRecoveryChallenge {
+        return PasswordRecoveryChallenge(
+            userId = userId,
+            email = email,
+            code = generateRandomConfirmationCode(),
+            uuid = generateRandomUUID()
+        )
+    }
+
+    @Transactional  // TODO: Useless here, hack for listener, must refactor
+    override fun startRecoverPasswordChallenge(
+        email: String
+    ): String {
+        val user = getUserByEmail(email)
+        val challenge = generateRecoverPasswordChallenge(userId = user.id, email = email)
+
+        saveRecoverPasswordChallenge(challenge)
+        sendRecoverPasswordEmail(email = email, code = challenge.code)
+
+        return challenge.uuid
+    }
+
+    override fun checkRecoverPasswordChallengeCode(
+        challengeUUID: String,
+        code: Int
+    ) {
+        val challenge = getRecoverPasswordChallenge(challengeUUID)
+
+        if (challenge.state == PasswordRecoveryChallengeState.FAILED) throw RecoverPasswordChallengeFailedHttpException()
+        if (challenge.state == PasswordRecoveryChallengeState.PASSED) throw RecoverPasswordChallengeAlreadyPassedHttpException()
+
+        if (challenge.code != code) {
+            saveRecoverPasswordChallenge(
+                challenge.copy(
+                    attempts = challenge.attempts + 1,
+
+                    // FIXME: Hardcoded
+                    state = if (challenge.attempts <= 5) PasswordRecoveryChallengeState.PENDING else PasswordRecoveryChallengeState.FAILED
+                )
+            )
+
+            throw RecoverPasswordChallengeAttemptFailedHttpException()
+        }
+
+        saveRecoverPasswordChallenge(challenge.copy(state = PasswordRecoveryChallengeState.PASSED))
+    }
+
+    override fun recoverPassword(
+        challengeUUID: String,
+        newPassword: String
+    ) {
+        val challenge = getRecoverPasswordChallenge(challengeUUID)
+
+        if (challenge.state != PasswordRecoveryChallengeState.PASSED) throw RecoverPasswordChallengeNotPassedHttpException()
+
+        val user = getUserById(challenge.userId)
+        authService.updateUserPassword(user, newPassword)
+        deleteRecoverPasswordChallenge(challengeUUID, user.id)
     }
 }

@@ -49,6 +49,10 @@ class UsersRepositoryImpl(
         return userJpaRepository.findAll(pageable).map { it.toEntity() }
     }
 
+    override fun getByEmail(email: String): User? {
+        return userJpaRepository.findByEmail(email)?.toEntity()
+    }
+
     override fun getByAuthCredentials(email: String, passwordRaw: String): User? {
         val model = userJpaRepository.findByEmail(email) ?: return null
         if (!SecurityHelper.isPasswordsMatch(passwordRaw, model.passwordHash)) return null

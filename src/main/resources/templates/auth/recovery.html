@@ -1,10 +1,172 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>Код подтверждения · Planify</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background-color: #EFF2F8;
+            -webkit-font-smoothing: antialiased;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        table { border-collapse: collapse; }
+        img { border: 0; line-height: 100%; }
+
+        .wrapper {
+            width: 100%;
+            background-color: #EFF2F8;
+            padding: 40px 16px;
+        }
+        .card {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(20, 35, 90, 0.08);
+        }
+
+        .header {
+            background-color: #2962FF;
+            background-image: linear-gradient(135deg, #2962FF 0%, #1B4DD8 100%);
+            padding: 36px 40px;
+            text-align: center;
+        }
+        .brand {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+        .brand-tag {
+            margin: 6px 0 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .content { padding: 40px; }
+        .title {
+            margin: 0 0 14px;
+            font-size: 21px;
+            font-weight: 700;
+            color: #1A1F36;
+        }
+        .text {
+            margin: 0 0 28px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #525A6B;
+        }
+
+        .code-box {
+            background-color: #EEF3FF;
+            border: 1px solid #DCE4FF;
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+        }
+        .code {
+            margin: 0;
+            font-family: "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            color: #2962FF;
+        }
+
+        .hint {
+            margin: 28px 0 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #525A6B;
+        }
+        .hint strong { color: #1A1F36; }
+
+        .note {
+            margin: 28px 0 0;
+            padding-top: 24px;
+            border-top: 1px solid #EDEFF5;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #9099AB;
+        }
+
+        .footer { padding: 24px 40px 8px; text-align: center; }
+        .footer p { margin: 0; font-size: 12px; line-height: 1.6; color: #9099AB; }
+
+        @media only screen and (max-width: 480px) {
+            .header, .content, .footer {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+            .code { font-size: 30px; letter-spacing: 6px; }
+        }
+    </style>
 </head>
 <body>
+
+<div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    Ваш код подтверждения для восстановления пароля в Planify
+</div>
+
+<table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center">
+
+            <table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0">
+
+                <tr>
+                    <td class="header">
+                        <p class="brand">Planify</p>
+                        <p class="brand-tag">Planning + Simplify</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="content">
+                        <h1 class="title">Восстановление пароля</h1>
+
+                        <p class="text">
+                            <span th:text="${firstName != null ? 'Здравствуйте, ' + firstName + '!' : 'Здравствуйте!'}">Здравствуйте!</span>
+                            Вы начали процедуру восстановление пароля. Введите этот код в приложении и следуйте дальнейшим инструкциям:
+                        </p>
+
+                        <div class="code-box">
+                            <p class="code" th:text="${verificationCode}">000 000</p>
+                        </div>
+
+                        <p class="hint">
+                            Код действует <strong><span th:text="${expiryMinutes}">00</span> минут</strong>. Никому его не сообщайте.
+                        </p>
+
+                        <p class="note">
+                            Если Вы не запрашивали восстановление пароля, просто проигнорируйте это письмо
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="footer">
+                        <p>Это автоматическое письмо, отвечать на него не нужно.</p>
+                        <p>© <span th:text="${#dates.year(#dates.createNow())}">2026</span> Planify</p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>

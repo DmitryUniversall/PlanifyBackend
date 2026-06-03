@@ -25,12 +25,19 @@ interface AuthService {
     fun getUserById(id: Long): User
     fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
     fun getAllUsersPaginated(pageable: Pageable): Page<User>
+    fun getUserByEmail(email: String): User
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
 
     fun activateUser(user: User): User
+    fun updateUserPassword(user: User, newPasswordRaw: String): User
 
     fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo)
     fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo
+
+    fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge
+    fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge)
+    fun deleteRecoverPasswordChallenge(challengeUUID: String, userId: Long)
+    fun getUserActiveRecoverPasswordChallenge(userId: Long): String?
 }

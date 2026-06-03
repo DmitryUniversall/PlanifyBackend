@@ -86,3 +86,32 @@ class ExpiredRegisterConfirmationCodeHttpException(
     appCode = 3016,
     message = message
 )
+
+class RecoverPasswordChallengeFailedHttpException(
+    message: String = "Recover password challenge failed"
+) : UnauthorizedHttpException(
+    appCode = 3017,
+    message = message
+)
+
+class RecoverPasswordChallengeAlreadyPassedHttpException(
+    message: String = "Recover password challenge already passed"
+) : UnauthorizedHttpException(
+    appCode = 3018,
+    message = message
+)
+
+class RecoverPasswordChallengeAttemptFailedHttpException(
+    message: String = "Recover password challenge attempt failed"
+) : UnauthorizedHttpException(
+    appCode = 3019,
+    message = message
+)
+
+
+class RecoverPasswordChallengeNotPassedHttpException(
+    message: String = "Recover password challenge not passed"
+) : UnauthorizedHttpException(
+    appCode = 3020,
+    message = message
+)

@@ -143,4 +143,8 @@ class RedisHelper(
         val values = stringRedisTemplate.opsForSet().members(key) ?: return emptyList()
         return values.mapNotNull { value -> objectMapperHelper.convertFromString(value, clazz) }
     }
+
+    fun del(key: String): Boolean {
+        return stringRedisTemplate.delete(key)
+    }
 }

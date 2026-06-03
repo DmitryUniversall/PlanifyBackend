@@ -59,4 +59,8 @@ interface AuthUseCaseGroup {
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
+
+    fun startRecoverPasswordChallenge(email: String): String
+    fun checkRecoverPasswordChallengeCode(challengeUUID: String, code: Int)
+    fun recoverPassword(challengeUUID: String, newPassword: String)
 }

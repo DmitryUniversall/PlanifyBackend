@@ -4,7 +4,7 @@ import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.*
-import com.planify.planifyspring.main.features.auth.domain.repositories.AuthEmailConfirmationRepository
+import com.planify.planifyspring.main.features.auth.domain.repositories.AuthEmailRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
@@ -22,7 +22,7 @@ class AuthServiceImpl(
     private val tokensRepository: TokensRepository,
     private val sessionsRepository: SessionsRepository,
     private val usersRepository: UsersRepository,
-    private val emailConfirmationRepository: AuthEmailConfirmationRepository,
+    private val authEmailRepository: AuthEmailRepository,
     private val cacheManager: CacheManager,
     private val objectMapper: ObjectMapper,
     private val profilesService: ProfilesService,
@@ -41,6 +41,8 @@ class AuthServiceImpl(
     override fun decodeJwtToken(token: String): AuthTokenPayload {
         return tokensRepository.decodeJwtToken(token)
     }
+
+    private fun hashPassword(passwordRaw: String): String = SecurityHelper.hashPassword(passwordRaw)
 
     private fun createSession(
         userId: Long,
@@ -155,7 +157,7 @@ class AuthServiceImpl(
         val user = usersRepository.create(
             username = username,
             email = email,
-            passwordHash = SecurityHelper.hashPassword(passwordRaw)
+            passwordHash = hashPassword(passwordRaw)
         ).also {
             val cache = JsonCacheWrapper(cacheManager.getCache("users")!!, objectMapper)
             cache.put(it.id.toString(), it)
@@ -188,6 +190,10 @@ class AuthServiceImpl(
         return usersRepository.getAllUsersPaginated(pageable)
     }
 
+    override fun getUserByEmail(email: String): User {
+        return usersRepository.getByEmail(email) ?: throw NotFoundAppError("User was not found")
+    }
+
     override fun getUserByCredentials(  // TODO: Cache?
         email: String,
         passwordRaw: String
@@ -206,11 +212,36 @@ class AuthServiceImpl(
         return activated
     }
 
+    override fun updateUserPassword(
+        user: User,
+        newPasswordRaw: String
+    ): User {
+        val updated = user.copy(passwordHash = hashPassword(newPasswordRaw))
+        usersRepository.save(updated)
+        return updated
+    }
+
     override fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo) {
-        emailConfirmationRepository.saveRegisterConfirmationInfo(info)
+        authEmailRepository.saveRegisterConfirmationInfo(info)
     }
 
     override fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo {
-        return emailConfirmationRepository.getRegisterConfirmationInfo(uuid) ?: throw NotFoundAppError("Confirmation info was not found")
+        return authEmailRepository.getRegisterConfirmationInfo(uuid) ?: throw NotFoundAppError("Confirmation info was not found")
+    }
+
+    override fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge {
+        return authEmailRepository.getRecoverPasswordChallenge(challengeUUID) ?: throw NotFoundAppError("Challenge was not found")
+    }
+
+    override fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge) {
+        return authEmailRepository.saveRecoverPasswordChallenge(passwordRecoveryChallenge)
+    }
+
+    override fun deleteRecoverPasswordChallenge(challengeUUID: String, userId: Long) {
+        return authEmailRepository.deleteRecoverPasswordChallenge(challengeUUID, userId)
+    }
+
+    override fun getUserActiveRecoverPasswordChallenge(userId: Long): String? {
+        return authEmailRepository.getUserActiveRecoverPasswordChallengeUUID(userId)
     }
 }

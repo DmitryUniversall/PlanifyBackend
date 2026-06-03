@@ -6,15 +6,19 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
 import com.planify.planifyspring.main.features.auth.routing.dto.*
 import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.create_new_password.CreateNewPasswordRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_auth_context.GetAuthContextResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.submit_recover_password_code.SubmitRecoverPasswordCodeRequestDTO
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
@@ -167,5 +171,34 @@ class AuthFeatureController(
                 AuthContextDTO.fromEntity(authContext)
             ).asSuccessApplicationResponse()
         )
+    }
+
+    @PostMapping("/recovery/password/challenge")
+    fun recoverPassword(
+        @RequestBody body: PasswordRecoveryRequestDTO
+    ): ResponseEntity<ApplicationResponse<PasswordRecoveryResponseDTO>> {
+        val challengeUUID = authUseCaseGroup.startRecoverPasswordChallenge(email = body.email)
+
+        return ResponseEntity.ok(
+            PasswordRecoveryResponseDTO(
+                challengeUUID = challengeUUID
+            ).asSuccessApplicationResponse()
+        )
+    }
+
+    @PostMapping("/recovery/password/challenge/submit")
+    fun submitRecoverPasswordCode(
+        @RequestBody body: SubmitRecoverPasswordCodeRequestDTO
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        authUseCaseGroup.checkRecoverPasswordChallengeCode(challengeUUID = body.challengeUUID, code = body.code)
+        return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @PostMapping("/recovery/password/challenge/recover")
+    fun createNewPassword(
+        @RequestBody body: CreateNewPasswordRequestDTO
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        authUseCaseGroup.recoverPassword(challengeUUID = body.challengeUUID, newPassword = body.newPassword)
+        return ResponseEntity.ok(ApplicationResponse.success())
     }
 }
