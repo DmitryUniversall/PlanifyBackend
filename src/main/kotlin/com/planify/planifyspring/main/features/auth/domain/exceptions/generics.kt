@@ -72,3 +72,17 @@ class InactiveSessionHttpException(
     appCode = 3011,
     message = message
 )
+
+class InvalidRegisterConfirmationCodeHttpException(
+    message: String? = "Confirmation code invalid"
+) : UnauthorizedHttpException(
+    appCode = 3015,
+    message = message
+)
+
+class ExpiredRegisterConfirmationCodeHttpException(
+    message: String = "Confirmation code expired"
+) : UnauthorizedHttpException(
+    appCode = 3016,
+    message = message
+)

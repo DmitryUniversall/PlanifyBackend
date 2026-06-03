@@ -1,10 +1,6 @@
 package com.planify.planifyspring.main.features.auth.domain.services
 
-import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPair
-import com.planify.planifyspring.main.features.auth.domain.entities.AuthTokenPayload
-import com.planify.planifyspring.main.features.auth.domain.entities.User
+import com.planify.planifyspring.main.features.auth.domain.entities.*
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -19,7 +15,7 @@ interface AuthService {
     fun getUserSessions(userId: Long): List<AuthSession>
     fun getActiveUserSessions(userId: Long): List<AuthSession>
 
-    fun rotateSessionTokens(session: AuthSession) : AuthTokenPair
+    fun rotateSessionTokens(session: AuthSession): AuthTokenPair
     fun rotateSessionTokens(userId: Long, sessionUuid: String): AuthTokenPair
 
     fun revokeSession(userId: Long, sessionUuid: String)
@@ -32,4 +28,9 @@ interface AuthService {
 
     fun getUserByCredentials(email: String, passwordRaw: String): User
     fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>
+
+    fun activateUser(user: User): User
+
+    fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo)
+    fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo
 }

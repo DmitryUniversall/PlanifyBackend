@@ -4,6 +4,7 @@ import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.features.auth.domain.entities.*
+import com.planify.planifyspring.main.features.auth.domain.repositories.AuthEmailConfirmationRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.UsersRepository
@@ -21,9 +22,10 @@ class AuthServiceImpl(
     private val tokensRepository: TokensRepository,
     private val sessionsRepository: SessionsRepository,
     private val usersRepository: UsersRepository,
+    private val emailConfirmationRepository: AuthEmailConfirmationRepository,
     private val cacheManager: CacheManager,
     private val objectMapper: ObjectMapper,
-    private val profilesService: ProfilesService
+    private val profilesService: ProfilesService,
 ) : AuthService {
     private fun generateTokenUuid(): String {
         return tokensRepository.generateTokenUuid()
@@ -196,5 +198,19 @@ class AuthServiceImpl(
 
     override fun getUserByCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo> {
         return usersRepository.getByAuthCredentialsWithAccessInfo(email, passwordRaw) ?: throw NotFoundAppError("User was not found")
+    }
+
+    override fun activateUser(user: User): User {
+        val activated = user.copy(isActivated = true)
+        usersRepository.save(activated)
+        return activated
+    }
+
+    override fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo) {
+        emailConfirmationRepository.saveRegisterConfirmationInfo(info)
+    }
+
+    override fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo {
+        return emailConfirmationRepository.getRegisterConfirmationInfo(uuid) ?: throw NotFoundAppError("Confirmation info was not found")
     }
 }

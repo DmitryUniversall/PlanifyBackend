@@ -6,6 +6,7 @@ import com.planify.planifyspring.core.utils.getRandomString
 import com.planify.planifyspring.main.exceptions.generics.AlreadyExistsHttpException
 import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
+import com.planify.planifyspring.main.features.auth.domain.events.ConfirmationEmailRequestedEvent
 import com.planify.planifyspring.main.features.auth.domain.exceptions.*
 import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
@@ -14,16 +15,20 @@ import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
+import jakarta.transaction.Transactional
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Component
 import java.security.SignatureException
+import java.util.*
 
 @Component
 class AuthUseCaseGroupImpl(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val eventPublisher: ApplicationEventPublisher
 ) : AuthUseCaseGroup {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -68,6 +73,10 @@ class AuthUseCaseGroupImpl(
     @Suppress("unused")
     private fun handleSuspiciousActivity(session: AuthSession, currentUserAgent: String) {
         // TODO
+    }
+
+    private fun generateConfirmationUUID(): String {
+        return UUID.randomUUID().toString()
     }
 
     override fun getSession(userId: Long, sessionUuid: String): AuthSession {
@@ -137,18 +146,74 @@ class AuthUseCaseGroupImpl(
         ) to tokens
     }
 
+    private fun generateConfirmationCode(): Int {
+        return (100000..999999).random()
+    }
+
+    private fun generateRegisterConfirmationInfo(userId: Long, email: String): RegisterConfirmationInfo {
+        return RegisterConfirmationInfo(
+            uuid = generateConfirmationUUID(),
+            code = generateConfirmationCode(),
+            userId = userId,
+            email = email
+        )
+    }
+
+    private fun sendRegisterConfirmationEmail(email: String, code: Int, firstName: String? = null) {
+        eventPublisher.publishEvent(
+            ConfirmationEmailRequestedEvent(email = email, code = code, firstName = firstName)
+        )
+    }
+
+    private fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo) {
+        authService.saveRegisterConfirmationInfo(info)
+    }
+
+    private fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo {
+        try {
+            return authService.getRegisterConfirmationInfo(uuid)
+        } catch (_: NotFoundAppError) {
+            throw ExpiredRegisterConfirmationCodeHttpException()
+        }
+    }
+
+    @Transactional
     override fun register(
         username: String,
         email: String,
         passwordRaw: String,
+        createProfileSchema: CreateProfileSchema,
         userAgent: String,
         clientName: String,
-        createProfileSchema: CreateProfileSchema,
         sessionName: String?
-    ): Pair<AuthContext, AuthTokenPair> {
+    ): String {
         val user = createUser(username, email, passwordRaw, createProfileSchema)
+
+        val info = generateRegisterConfirmationInfo(userId = user.id, email = email)
+
+        saveRegisterConfirmationInfo(info)
+
+        sendRegisterConfirmationEmail(email = email, code = info.code, firstName = createProfileSchema.firstName)
+
+        return info.uuid
+    }
+
+    @Transactional
+    override fun confirmRegistration(
+        confirmationUuid: String,
+        code: Int,
+        userAgent: String,
+        clientName: String,
+        sessionName: String?,
+    ): Pair<AuthContext, AuthTokenPair> {
+        val confirmationInfo = getRegisterConfirmationInfo(confirmationUuid)
+        if (code != confirmationInfo.code) throw InvalidRegisterConfirmationCodeHttpException()
+
+        val userInactive = getUserById(confirmationInfo.userId)
+        val userActivated = authService.activateUser(userInactive)
+
         val (session, tokens) = authService.startSession(
-            userId = user.id,
+            userId = userActivated.id,
             userAgent = userAgent,
             sessionName = sessionName ?: generateDefaultSessionName(clientName, userAgent),
             clientName = clientName
@@ -156,11 +221,23 @@ class AuthUseCaseGroupImpl(
 
         return AuthContext(
             session = session,
-            user = user,
+            user = userActivated,
             accessInfo = AccessInfo()
         ) to tokens
     }
 
+    override fun resendRegisterConfirmation(
+        confirmationUuid: String,
+    ) {
+        val info = getRegisterConfirmationInfo(confirmationUuid)
+        val updatedInfo = info.copy(code = generateConfirmationCode())
+
+        saveRegisterConfirmationInfo(updatedInfo)
+
+        sendRegisterConfirmationEmail(email = updatedInfo.email, code = updatedInfo.code)
+    }
+
+    @Transactional
     override fun createUser(username: String, email: String, passwordRaw: String, createProfileSchema: CreateProfileSchema): User {
         try {
             return authService.createUser(username, email, passwordRaw, createProfileSchema)

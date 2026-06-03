@@ -9,16 +9,19 @@ import jakarta.persistence.*
 open class UserModel(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open val id: Long? = null,
+    open var id: Long? = null,
 
     @Column(nullable = false, unique = true)
-    open val username: String,
+    open var username: String,
 
     @Column(nullable = false, unique = true)
-    open val email: String,
+    open var email: String,
 
     @Column(nullable = false)
-    open val passwordHash: String,
+    open var passwordHash: String,
+
+    @Column(name = "is_activated", nullable = false)
+    open var isActivated: Boolean = false,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -26,7 +29,7 @@ open class UserModel(
         joinColumns = [JoinColumn(name = "role_id")],
         inverseJoinColumns = [JoinColumn(name = "user_id")]
     )
-    open val roles: MutableSet<RoleModel> = mutableSetOf(),
+    open var roles: MutableSet<RoleModel> = mutableSetOf(),
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -34,7 +37,7 @@ open class UserModel(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "authority_id")]
     )
-    open val authorities: MutableSet<AuthorityModel> = mutableSetOf(),
+    open var authorities: MutableSet<AuthorityModel> = mutableSetOf(),
 ) {
     companion object {
         fun fromEntity(entity: User): UserModel {
@@ -42,7 +45,8 @@ open class UserModel(
                 id = entity.id,
                 username = entity.username,
                 email = entity.email,
-                passwordHash = entity.passwordHash
+                passwordHash = entity.passwordHash,
+                isActivated = entity.isActivated,
             )
         }
     }
@@ -52,7 +56,8 @@ open class UserModel(
             id = id!!,
             username = username,
             email = email,
-            passwordHash = passwordHash
+            passwordHash = passwordHash,
+            isActivated = isActivated
         )
     }
 

@@ -5,6 +5,7 @@ import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
 import com.planify.planifyspring.main.features.auth.routing.dto.*
+import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_auth_context.GetAuthContextResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
@@ -12,6 +13,7 @@ import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRespo
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import jakarta.validation.Valid
@@ -46,12 +48,34 @@ class AuthFeatureController(
         )
     }
 
+    @PostMapping("/register/confirm")
+    fun confirmRegistration(
+        @RequestHeader("User-Agent") userAgent: String,
+        @Valid @RequestBody body: ConfirmRegistrationRequestDTO
+    ): ResponseEntity<ApplicationResponse<ConfirmRegistrationResponseDTO>> {
+        val (info, tokens) = authUseCaseGroup.confirmRegistration(
+            userAgent = userAgent,
+            code = body.code,
+            clientName = body.clientName,
+            confirmationUuid = body.confirmationUuid,
+        )
+
+        return ResponseEntity.ok(
+            ConfirmRegistrationResponseDTO(
+                user = UserPrivateDTO.fromEntity(info.user),
+                session = AuthSessionPrivateDTO.fromEntity(info.session),
+                tokens = AuthTokenPairDTO.fromEntity(tokens),
+                accessInfo = AccessInfoDTO.fromEntity(info.accessInfo)
+            ).asSuccessApplicationResponse()
+        )
+    }
+
     @PostMapping("/register")
     fun register(
         @RequestHeader("User-Agent") userAgent: String,
         @Valid @RequestBody body: RegisterRequestDTO
     ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
-        val (info, tokens) = authUseCaseGroup.register(
+        val confirmationUUID = authUseCaseGroup.register(
             email = body.email,
             username = body.username,
             passwordRaw = body.password,
@@ -68,10 +92,7 @@ class AuthFeatureController(
 
         return ResponseEntity.ok(
             RegisterResponseDTO(
-                user = UserPrivateDTO.fromEntity(info.user),
-                session = AuthSessionPrivateDTO.fromEntity(info.session),
-                tokens = AuthTokenPairDTO.fromEntity(tokens),
-                accessInfo = AccessInfoDTO.fromEntity(info.accessInfo)
+                confirmationUUID = confirmationUUID,
             ).asSuccessApplicationResponse()
         )
     }

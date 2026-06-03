@@ -30,11 +30,21 @@ interface AuthUseCaseGroup {
         username: String,
         email: String,
         passwordRaw: String,
+        createProfileSchema: CreateProfileSchema,
         userAgent: String,
         clientName: String,
-        createProfileSchema: CreateProfileSchema,
         sessionName: String? = null
+    ): String
+
+    fun confirmRegistration(
+        confirmationUuid: String,
+        code: Int,
+        userAgent: String,
+        clientName: String,
+        sessionName: String? = null,
     ): Pair<AuthContext, AuthTokenPair>
+
+    fun resendRegisterConfirmation(confirmationUuid: String)
 
     fun createUser(
         username: String,
