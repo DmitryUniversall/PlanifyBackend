@@ -15,9 +15,9 @@ interface UsersRepository {
     ): User
 
     fun getById(id: Long): User?
+    fun getByEmail(email: String): User?
     fun getByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>?
     fun getAllUsersPaginated(pageable: Pageable): Page<User>
-    fun getByEmail(email: String): User?
 
     fun getByAuthCredentials(email: String, passwordRaw: String): User?
     fun getByAuthCredentialsWithAccessInfo(email: String, passwordRaw: String): Pair<User, AccessInfo>?

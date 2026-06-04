@@ -1,5 +1,7 @@
 package com.planify.planifyspring.main.features.profiles.data.repositories_impl
 
+import com.planify.planifyspring.main.common.utils.JsonCacheWrapper
+import com.planify.planifyspring.main.features.profiles.data.dto.ProfileCacheDTO
 import com.planify.planifyspring.main.features.profiles.data.jpa.ProfilesJpaRepository
 import com.planify.planifyspring.main.features.profiles.data.models.ProfileModel
 import com.planify.planifyspring.main.features.profiles.data.specifications.ProfileSearchSpecification
@@ -7,22 +9,34 @@ import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.repositories.ProfilesRepository
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import com.planify.planifyspring.main.features.profiles.domain.schemas.PatchProfileSchema
+import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
+import tools.jackson.databind.ObjectMapper
 
 @Repository
 class ProfilesRepositoryImpl(
-    private val profilesJpaRepository: ProfilesJpaRepository
+    private val profilesJpaRepository: ProfilesJpaRepository,
+    private val cacheManager: CacheManager,
+    private val objectMapper: ObjectMapper
 ) : ProfilesRepository {
+    private fun cache() = JsonCacheWrapper(cacheManager.getCache("profiles")!!, objectMapper)
+
     override fun getProfileById(userId: Long): Profile? {
+        val cached = cache().getAs<ProfileCacheDTO>(userId.toString())
+        if (cached != null) return cached.toEntity()
+
         return profilesJpaRepository.findByUserId(userId)?.toEntity()
+            ?.also { cache().put(userId.toString(), ProfileCacheDTO.fromEntity(it)) }
     }
 
     override fun patchProfile(
         userId: Long,
         patch: PatchProfileSchema
     ) {
+        cacheManager.getCache("profiles")?.evict(userId.toString())
+
         profilesJpaRepository.parchProfile(
             userId = userId,
             firstName = patch.firstName,
@@ -56,5 +70,6 @@ class ProfilesRepositoryImpl(
         profilesJpaRepository.save(profile)
 
         return profile.toEntity()
+            .also { cache().put(userId.toString(), ProfileCacheDTO.fromEntity(it)) }
     }
 }

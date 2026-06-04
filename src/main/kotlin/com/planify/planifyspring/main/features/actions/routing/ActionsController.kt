@@ -2,7 +2,7 @@ package com.planify.planifyspring.main.features.actions.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
-import com.planify.planifyspring.main.features.actions.domain.use_cases.ActionsUseCaseGroup
+import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.actions.routing.dto.ActionDTO
 import com.planify.planifyspring.main.features.actions.routing.dto.get_my_incomming_actions.GetMyIncomingActionsResponseDTO
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/actions")
 class ActionsController(
-    val actionsUseCaseGroup: ActionsUseCaseGroup
+    val actionsService: ActionsService
 ) {
     @GetMapping("/my/incoming")
     fun getIncomingActions(
@@ -23,7 +23,7 @@ class ActionsController(
         @RequestParam count: Long = 10,
         @RequestParam timeout: Long = 30,
     ): ResponseEntity<ApplicationResponse<GetMyIncomingActionsResponseDTO>> {
-        val actions = actionsUseCaseGroup.getUserIncomingActions(
+        val actions = actionsService.getUserIncomingActions(
             userId = authContext.user.id,
             lastSeen = lastSeen,
             count = count,
@@ -42,7 +42,7 @@ class ActionsController(
         @AuthenticationPrincipal authContext: AuthContext,
         @PathVariable actionId: String,
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        actionsUseCaseGroup.deleteUserAction(
+        actionsService.deleteUserAction(
             userId = authContext.user.id,
             actionId = actionId
         )

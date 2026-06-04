@@ -6,5 +6,6 @@ data class ConfirmationEmailRequestedEvent(
     val email: String,
     val code: Int,
     val firstName: String? = null,
+    val expiryMinutes: Int,
     val locale: Locale? = null
 )

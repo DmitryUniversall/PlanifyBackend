@@ -1,6 +1,10 @@
 package com.planify.planifyspring.core.exceptions
 
-class AlreadyExistsAppError(message: String) : ApplicationException(message)
-class NotFoundAppError(message: String) : ApplicationException(message)
-class AlreadyInUseAppError(message: String) : ApplicationException(message)
-class InvalidArgumentAppError(message: String) : ApplicationException(message)
+open class AlreadyExistsAppError(message: String) : ApplicationException(message)
+open class NotFoundAppError(message: String) : ApplicationException(message)
+open class AlreadyInUseAppError(message: String) : ApplicationException(message)
+open class InvalidArgumentAppError(message: String) : ApplicationException(message)
+
+open class AccessDeniedAppError(message: String) : ApplicationException(message)
+open class ExpiredAppError(message: String) : ApplicationException(message)
+open class UnprocessableEntityAppError(message: String) : ApplicationException(message)

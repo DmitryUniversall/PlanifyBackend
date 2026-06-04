@@ -22,7 +22,8 @@ interface MeetingsService {
 
     fun patchMeeting(
         meetingId: Long,
-        patch: MeetingPatchSchema
+        patch: MeetingPatchSchema,
+        requesterId: Long
     )
 
     fun getUserDailyMeetingsWithParticipantIds(

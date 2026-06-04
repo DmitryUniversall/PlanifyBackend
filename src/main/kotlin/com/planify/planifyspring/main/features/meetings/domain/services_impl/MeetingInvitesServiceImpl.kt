@@ -1,10 +1,19 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
-import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.common.utils.ObjectMapperHelper
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteAlreadyRepliedAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteExpiredAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteNotFoundAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingAlreadyStartedAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingTimeConflictAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.RescheduleNotRequestedAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.TargetAlreadyInvitedAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.TargetAlreadyParticipantAppError
+import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingInvitePolicy
+import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingPolicy
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingInvitesRepository
 import com.planify.planifyspring.main.features.meetings.domain.schemas.InviteRescheduleStatusDataScheme
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInviteParchSchema
@@ -12,18 +21,51 @@ import com.planify.planifyspring.main.features.meetings.domain.schemas.actions.*
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 @Service
 class MeetingInvitesServiceImpl(
     val meetingInvitesRepository: MeetingInvitesRepository,
     val actionsService: ActionsService,
-    val meetingService: MeetingsService,
-    val objectMapperHelper: ObjectMapperHelper
+    val meetingsService: MeetingsService,
+    val objectMapperHelper: ObjectMapperHelper,
+    val meetingPolicy: MeetingPolicy,
+    val meetingInvitePolicy: MeetingInvitePolicy
 ) : MeetingInvitesService {
-    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long, expiresAt: Instant): MeetingInvite {
-        val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId, expiresAt)
-    
+
+    private fun assertInviteNotReplied(invite: MeetingInvite) {
+        if (invite.status == MeetingInviteStatus.ACCEPTED || invite.status == MeetingInviteStatus.REJECTED) {
+            throw InviteAlreadyRepliedAppError()
+        }
+    }
+
+    private fun assertInviteNotExpired(invite: MeetingInvite) {
+        if (invite.expiresAt < Instant.now()) throw InviteExpiredAppError()
+    }
+
+    @Transactional(readOnly = true)
+    override fun getInvite(inviteUuid: String): MeetingInvite {
+        return meetingInvitesRepository.getInvite(inviteUuid) ?: throw InviteNotFoundAppError()
+    }
+
+    @Transactional(readOnly = true)
+    override fun getMeetingInvites(meetingId: Long): List<MeetingInvite> {
+        return meetingInvitesRepository.getMeetingInvites(meetingId)
+    }
+
+    @Transactional
+    override fun createInvite(meetingId: Long, senderId: Long, targetId: Long): MeetingInvite {
+        val meeting = meetingsService.getMeetingById(meetingId)
+
+        meetingPolicy.assertIsOwner(senderId, meeting)
+
+        if (getMeetingInvites(meetingId).any { it.targetId == targetId }) throw TargetAlreadyInvitedAppError()
+        if (meetingsService.isUserParticipant(targetId, meetingId)) throw TargetAlreadyParticipantAppError()
+        if (meeting.startsAt < Instant.now()) throw MeetingAlreadyStartedAppError()
+
+        val invite = meetingInvitesRepository.createInvite(meetingId, senderId, targetId, expiresAt = meeting.startsAt)
+
         actionsService.createUserAction(
             userId = targetId,
             type = "meetings:invited",
@@ -51,23 +93,29 @@ class MeetingInvitesServiceImpl(
         return invite
     }
 
-    override fun getInvite(inviteUuid: String): MeetingInvite {
-        return meetingInvitesRepository.getInvite(inviteUuid) ?: throw NotFoundAppError("Invite was not found")
-    }
+    @Transactional
+    override fun acceptInvite(inviteUuid: String, requesterId: Long) {
+        val invite = getInvite(inviteUuid)
+        meetingInvitePolicy.assertIsTarget(requesterId, invite)
 
-    override fun getMeetingInvites(meetingId: Long): List<MeetingInvite> {
-        return meetingInvitesRepository.getMeetingInvites(meetingId)
-    }
+        assertInviteNotReplied(invite)
+        assertInviteNotExpired(invite)
 
-    override fun acceptInvite(invite: MeetingInvite) {
+        val meeting = meetingsService.getMeetingById(invite.meetingId)
+        if (
+            meetingsService.userHasMeetingsBetween(
+                userId = invite.targetId,
+                startAt = meeting.startsAt,
+                endAt = meeting.startsAt.plusSeconds(meeting.duration * 3600L)
+            )
+        ) throw MeetingTimeConflictAppError()
+
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(
-                status = MeetingInviteStatus.ACCEPTED
-            )
+            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.ACCEPTED)
         )
 
-        meetingService.createMeetingParticipant(invite.meetingId, invite.targetId)
+        meetingsService.createMeetingParticipant(invite.meetingId, invite.targetId)
 
         actionsService.createUserAction(
             userId = invite.senderId,
@@ -78,7 +126,7 @@ class MeetingInvitesServiceImpl(
                 targetId = invite.targetId,
                 inviteUuid = invite.uuid,
                 updatedAt = Instant.now(),
-                oldStatus = invite.status,  // Still contain old status!
+                oldStatus = invite.status,
                 newStatus = MeetingInviteStatus.ACCEPTED,
             )
         )
@@ -92,7 +140,7 @@ class MeetingInvitesServiceImpl(
                 targetId = invite.targetId,
                 inviteUuid = invite.uuid,
                 updatedAt = Instant.now(),
-                oldStatus = invite.status,  // Still contain old status!
+                oldStatus = invite.status,
                 newStatus = MeetingInviteStatus.ACCEPTED
             )
         )
@@ -108,16 +156,17 @@ class MeetingInvitesServiceImpl(
         )
     }
 
-    override fun acceptInvite(inviteUuid: String) {
-        acceptInvite(getInvite(inviteUuid))
-    }
+    @Transactional
+    override fun rejectInvite(inviteUuid: String, requesterId: Long) {
+        val invite = getInvite(inviteUuid)
+        meetingInvitePolicy.assertIsTarget(requesterId, invite)
 
-    override fun rejectInvite(invite: MeetingInvite) {
+        assertInviteNotReplied(invite)
+        assertInviteNotExpired(invite)
+
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(
-                status = MeetingInviteStatus.REJECTED
-            )
+            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.REJECTED)
         )
 
         actionsService.createUserAction(
@@ -129,7 +178,7 @@ class MeetingInvitesServiceImpl(
                 targetId = invite.targetId,
                 inviteUuid = invite.uuid,
                 updatedAt = Instant.now(),
-                oldStatus = invite.status,  // Still contain old status!
+                oldStatus = invite.status,
                 newStatus = MeetingInviteStatus.REJECTED,
             )
         )
@@ -143,24 +192,25 @@ class MeetingInvitesServiceImpl(
                 targetId = invite.targetId,
                 inviteUuid = invite.uuid,
                 updatedAt = Instant.now(),
-                oldStatus = invite.status,  // Still contain old status!
+                oldStatus = invite.status,
                 newStatus = MeetingInviteStatus.REJECTED
             )
         )
     }
 
-    override fun rejectInvite(inviteUuid: String) {
-        acceptInvite(getInvite(inviteUuid))
-    }
+    @Transactional
+    override fun requestRescheduleInvite(inviteUuid: String, rescheduleTo: Instant, requesterId: Long) {
+        val invite = getInvite(inviteUuid)
+        meetingInvitePolicy.assertIsTarget(requesterId, invite)
 
-    override fun requestRescheduleInvite(invite: MeetingInvite, rescheduleTo: Instant) {
+        assertInviteNotReplied(invite)
+        assertInviteNotExpired(invite)
+
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
             patch = MeetingInviteParchSchema(
                 status = MeetingInviteStatus.RESCHEDULE_REQUESTED,
-                statusData = InviteRescheduleStatusDataScheme(
-                    rescheduleTo = rescheduleTo
-                )
+                statusData = InviteRescheduleStatusDataScheme(rescheduleTo = rescheduleTo)
             )
         )
 
@@ -191,22 +241,26 @@ class MeetingInvitesServiceImpl(
         )
     }
 
-    override fun requestRescheduleInvite(inviteUuid: String, rescheduleTo: Instant) {
-        requestRescheduleInvite(getInvite(inviteUuid), rescheduleTo)
-    }
+    @Transactional
+    override fun responseRescheduleInvite(inviteUuid: String, shouldReschedule: Boolean, requesterId: Long) {
+        val invite = getInvite(inviteUuid)
+        meetingInvitePolicy.assertIsSender(requesterId, invite)
 
-    override fun responseRescheduleInvite(invite: MeetingInvite, shouldReschedule: Boolean) {
+        if (invite.status != MeetingInviteStatus.RESCHEDULE_REQUESTED) throw RescheduleNotRequestedAppError()
+        assertInviteNotExpired(invite)
+
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(
-                status = MeetingInviteStatus.PENDING
-            )
+            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.PENDING)
         )
 
         if (shouldReschedule) {
-            @Suppress("UNCHECKED_CAST")  // TODO: Refactor it
-            val rescheduleTo = objectMapperHelper.convertFromStringsMap(invite.statusData!! as Map<String, String>, InviteRescheduleStatusDataScheme::class.java).rescheduleTo
-            meetingService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo)
+            @Suppress("UNCHECKED_CAST")
+            val rescheduleTo = objectMapperHelper.convertFromStringsMap(
+                invite.statusData!! as Map<String, String>,
+                InviteRescheduleStatusDataScheme::class.java
+            ).rescheduleTo
+            meetingsService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo)
         }
 
         actionsService.createUserAction(
@@ -234,9 +288,5 @@ class MeetingInvitesServiceImpl(
                 shouldReschedule = shouldReschedule
             )
         )
-    }
-
-    override fun responseRescheduleInvite(inviteUuid: String, shouldReschedule: Boolean) {
-        responseRescheduleInvite(getInvite(inviteUuid), shouldReschedule)
     }
 }

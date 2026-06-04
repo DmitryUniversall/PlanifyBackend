@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import org.thymeleaf.context.Context
-import java.util.Locale
+import java.util.*
 
 @Component
 class ConfirmationEmailListener(
@@ -18,16 +18,18 @@ class ConfirmationEmailListener(
     @Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun on(event: ConfirmationEmailRequestedEvent) {
-        val context = Context().apply {
+        val locale = event.locale ?: Locale.ENGLISH
+
+        val context = Context(locale).apply {
             setVariable("verificationCode", event.code)
             setVariable("firstName", event.firstName)
-            setVariable("expiryMinutes", 20)  // FIXME: Hardcoded
+            setVariable("expiryMinutes", event.expiryMinutes)
         }
 
         val subject = messageSource.getMessage(
-            /* code = */ "email.registration.subject",
-            /* args = */ null,
-            /* locale = */ event.locale ?: Locale.getDefault(),
+            "email.registration.subject",
+            null,
+            locale,
         )
 
         emailService.sendFormattedHtmlMessage(event.email, subject, "auth/confirmation", context)

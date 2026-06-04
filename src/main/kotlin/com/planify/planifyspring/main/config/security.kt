@@ -29,7 +29,12 @@ class ApplicationSecurityConfig(
                 it.accessDeniedHandler(accessDeniedHandler)
             }
             .authorizeHttpRequests {
-                it.requestMatchers("/auth/login", "/auth/register", "/auth/register/confirm", "/auth/refresh", "/auth/recovery/**").permitAll()
+                it.requestMatchers(
+                    "/auth/login",
+                    "/auth/register/**",
+                    "/auth/refresh",
+                    "/auth/recovery/**"
+                ).permitAll()
                 it.requestMatchers("/tools/ping").permitAll()
                 it.requestMatchers(
                     "/v3/api-docs/**",

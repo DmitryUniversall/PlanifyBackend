@@ -1,10 +1,14 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
-import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.core.utils.atStartOfAnHour
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingInPastAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingNotFoundAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingTimeConflictAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.RescheduleToPastAppError
+import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingPolicy
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingsRepository
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
@@ -14,8 +18,10 @@ import java.time.Instant
 
 @Service
 class MeetingsServiceImpl(
-    val meetingsRepository: MeetingsRepository
+    val meetingsRepository: MeetingsRepository,
+    val meetingPolicy: MeetingPolicy
 ) : MeetingsService {
+    @Transactional
     override fun createMeeting(
         ownerId: Long,
         name: String,
@@ -24,12 +30,18 @@ class MeetingsServiceImpl(
         startsAt: Instant,
         duration: Int
     ): Meeting {
+        val start = startsAt.atStartOfAnHour()
+        val end = start.plusSeconds(duration * 3600L)
+
+        if (start < Instant.now()) throw MeetingInPastAppError()
+        if (meetingsRepository.userHasMeetingsBetween(userId = ownerId, startAt = start, endAt = end)) throw MeetingTimeConflictAppError()
+
         val meeting = meetingsRepository.createMeeting(
             ownerId = ownerId,
             name = name,
             description = description,
             location = location,
-            startsAt = startsAt.atStartOfAnHour(),
+            startsAt = start,
             duration = duration
         )
 
@@ -41,14 +53,22 @@ class MeetingsServiceImpl(
         return meeting
     }
 
+    @Transactional(readOnly = true)
     override fun getMeetingById(meetingId: Long): Meeting {
-        return meetingsRepository.getMeetingById(meetingId) ?: throw NotFoundAppError("Meeting was not found")
+        return meetingsRepository.getMeetingById(meetingId) ?: throw MeetingNotFoundAppError()
     }
 
-    override fun patchMeeting(meetingId: Long, patch: MeetingPatchSchema) {
+    @Transactional
+    override fun patchMeeting(meetingId: Long, patch: MeetingPatchSchema, requesterId: Long) {
+        val meeting = meetingsRepository.getMeetingById(meetingId) ?: throw MeetingNotFoundAppError()
+
+        meetingPolicy.assertIsOwner(requesterId, meeting)
+        if (meeting.startsAt < Instant.now()) throw RescheduleToPastAppError()
+
         meetingsRepository.patchMeeting(meetingId, patch)
     }
 
+    @Transactional(readOnly = true)
     override fun getUserDailyMeetingsWithParticipantIds(
         userId: Long,
         startAt: Instant,
@@ -57,6 +77,7 @@ class MeetingsServiceImpl(
         return meetingsRepository.getUserDailyMeetingsWithParticipantIds(userId, startAt, endAt)
     }
 
+    @Transactional(readOnly = true)
     override fun getUserDailyMeetingsShort(userId: Long, startAt: Instant, endAt: Instant): Map<Instant, Long> {
         return meetingsRepository.getUserDailyMeetingsShort(userId, startAt, endAt)
     }
@@ -70,7 +91,7 @@ class MeetingsServiceImpl(
 
     @Transactional
     override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant) {
-        patchMeeting(
+        meetingsRepository.patchMeeting(
             meetingId = meetingId,
             patch = MeetingPatchSchema(
                 startsAt = rescheduleTo
@@ -78,14 +99,17 @@ class MeetingsServiceImpl(
         )
     }
 
+    @Transactional(readOnly = true)
     override fun getMeetingWithParticipantIds(meetingId: Long): MeetingWithParticipantIds {
-        return meetingsRepository.getMeetingWithParticipantIds(meetingId) ?: throw NotFoundAppError("Meeting was not found")
+        return meetingsRepository.getMeetingWithParticipantIds(meetingId) ?: throw MeetingNotFoundAppError()
     }
 
+    @Transactional(readOnly = true)
     override fun isUserParticipant(userId: Long, meetingId: Long): Boolean {
         return meetingsRepository.isUserParticipant(userId, meetingId)
     }
 
+    @Transactional(readOnly = true)
     override fun userHasMeetingsBetween(userId: Long, startAt: Instant, endAt: Instant): Boolean {
         return meetingsRepository.userHasMeetingsBetween(userId, startAt, endAt)
     }

@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.auth.domain.exceptions
 
+import com.planify.planifyspring.main.exceptions.generics.InternalServerErrorHttpException
 import com.planify.planifyspring.main.exceptions.generics.UnauthorizedHttpException
 
 class TokenInvalidHttpException(
@@ -108,10 +109,16 @@ class RecoverPasswordChallengeAttemptFailedHttpException(
     message = message
 )
 
-
 class RecoverPasswordChallengeNotPassedHttpException(
     message: String = "Recover password challenge not passed"
 ) : UnauthorizedHttpException(
     appCode = 3020,
+    message = message
+)
+
+class BadRecoverPasswordChallengeStateHttpException(
+    message: String = "Bad password challenge state"
+) : InternalServerErrorHttpException(
+    appCode = 3021,
     message = message
 )

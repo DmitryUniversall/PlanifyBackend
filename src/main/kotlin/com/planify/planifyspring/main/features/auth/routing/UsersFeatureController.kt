@@ -3,7 +3,7 @@ package com.planify.planifyspring.main.features.auth.routing
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
+import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.routing.dto.UserPrivateDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_all_users.GetAllUsersResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.me.GetMeResponseDTO
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/users")
 class UsersFeatureController(
-    val authUseCaseGroup: AuthUseCaseGroup
+    val authService: AuthService
 ) {
     @GetMapping("/me")
     fun getMe(
@@ -37,7 +37,7 @@ class UsersFeatureController(
     fun getAll(
         @PageableDefault(size = 10) pageable: Pageable,
     ): ResponseEntity<ApplicationResponse<GetAllUsersResponseDTO>> {
-        val usersPaginated = authUseCaseGroup.getAllUsersPaginated(pageable)
+        val usersPaginated = authService.getAllUsersPaginated(pageable)
         return ResponseEntity.ok(
             GetAllUsersResponseDTO(
                 users = usersPaginated.map { UserPrivateDTO.fromEntity(it) }

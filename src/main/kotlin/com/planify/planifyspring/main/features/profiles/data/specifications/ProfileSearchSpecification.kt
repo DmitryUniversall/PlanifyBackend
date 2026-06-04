@@ -2,36 +2,40 @@ package com.planify.planifyspring.main.features.profiles.data.specifications
 
 import com.planify.planifyspring.main.features.auth.data.models.UserModel
 import com.planify.planifyspring.main.features.profiles.data.models.ProfileModel
-import jakarta.persistence.criteria.CriteriaBuilder
-import jakarta.persistence.criteria.CriteriaQuery
-import jakarta.persistence.criteria.Root
+import jakarta.persistence.criteria.Predicate
 import org.springframework.data.jpa.domain.Specification
 
 object ProfileSearchSpecification {
-    fun searchProfile(input: String): Specification<ProfileModel> {
-        val tokens = input.trim().lowercase().split("\\s+".toRegex())
+    fun searchProfile(input: String): Specification<ProfileModel> {  // TODO: Use raw sql?
+        val tokens = input.trim().lowercase().split("\\s+".toRegex()).filter { it.isNotBlank() }
 
-        return Specification { root: Root<ProfileModel>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
-            var finalPredicate = criteriaBuilder.disjunction()
+        return Specification { root, query, cb ->
+            if (tokens.isEmpty()) return@Specification cb.conjunction()
 
-            val userRoot: Root<UserModel> = query.from(UserModel::class.java)
-            val joinCondition = criteriaBuilder.equal(root.get<Long>("userId"), userRoot.get<Long>("id"))
-
-            tokens.forEach { token ->
+            val perTokenPredicates = tokens.map { token ->
                 val pattern = "%$token%"
 
-                val tokenPredicate = criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("firstName")), pattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("lastName")), pattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("department")), pattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("position")), pattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(userRoot.get("username")), pattern)
-                )
+                val usernameSubquery = query.subquery(Long::class.java)
+                val userRoot = usernameSubquery.from(UserModel::class.java)
+                usernameSubquery
+                    .select(userRoot.get("id"))
+                    .where(
+                        cb.and(
+                            cb.equal(userRoot.get<Long>("id"), root.get<Long>("userId")),
+                            cb.like(cb.lower(userRoot.get("username")), pattern)
+                        )
+                    )
 
-                finalPredicate = criteriaBuilder.or(finalPredicate, criteriaBuilder.and(joinCondition, tokenPredicate))
+                cb.or(
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern),
+                    cb.like(cb.lower(root.get("position")), pattern),
+                    cb.like(cb.lower(root.get("department")), pattern),
+                    cb.exists(usernameSubquery)
+                )
             }
 
-            finalPredicate
+            cb.and(*perTokenPredicates.toTypedArray<Predicate>())
         }
     }
 }

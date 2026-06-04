@@ -16,6 +16,10 @@ class RedisHelper(
         stringRedisTemplate.expire(key, ttl)
     }
 
+    fun del(key: String): Boolean {
+        return stringRedisTemplate.delete(key)
+    }
+
     fun <T : Any> hsetField(key: String, field: String, value: T) {
         val jsonSting = objectMapperHelper.convertToString(value)
         stringRedisTemplate.opsForHash<String, String>().put(key, field, jsonSting)
@@ -142,9 +146,5 @@ class RedisHelper(
     fun <T : Any> getSet(key: String, clazz: Class<T>): List<T> {
         val values = stringRedisTemplate.opsForSet().members(key) ?: return emptyList()
         return values.mapNotNull { value -> objectMapperHelper.convertFromString(value, clazz) }
-    }
-
-    fun del(key: String): Boolean {
-        return stringRedisTemplate.delete(key)
     }
 }

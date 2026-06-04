@@ -22,39 +22,28 @@ class AuthEmailRepositoryImpl(
     }
 
     private fun getUserActiveRecoveryChallengeKey(userId: Long): String {
-        return "auth:password_recovery:user:${userId}"
+        return "auth:password_recovery:user:$userId"
     }
 
-    override fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo) {
-        val dto = RegisterConfirmationInfoDTO.fromEntity(info)
-
+    override fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo, ttl: Duration) {
         val key = getConfirmationKey(info.uuid)
-
-        helper.set(key, dto)
-        helper.expire(key, Duration.ofMinutes(20))
+        helper.hset(key, RegisterConfirmationInfoDTO.fromEntity(info))
+        helper.expire(key, ttl)
     }
 
     override fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo? {
-        val dto = helper.get(getConfirmationKey(uuid), RegisterConfirmationInfoDTO::class.java)
+        val dto = helper.hget(getConfirmationKey(uuid), RegisterConfirmationInfoDTO::class.java)
         return dto?.toEntity()
     }
 
-    override fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge) {
-        val dto = PasswordRecoveryChallengeDTO.fromEntity(passwordRecoveryChallenge)
-
+    override fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge, ttl: Duration) {
         val key = getPasswordRecoveryKey(passwordRecoveryChallenge.uuid)
-
-        helper.set(key, dto)
-        helper.expire(key, Duration.ofMinutes(20))
+        helper.set(key, PasswordRecoveryChallengeDTO.fromEntity(passwordRecoveryChallenge))
+        helper.expire(key, ttl)
 
         val userActiveChallengeKey = getUserActiveRecoveryChallengeKey(passwordRecoveryChallenge.userId)
         helper.set(userActiveChallengeKey, passwordRecoveryChallenge.uuid)
-        helper.expire(userActiveChallengeKey, Duration.ofMinutes(20))
-    }
-
-    override fun deleteRecoverPasswordChallenge(challengeUUID: String, userId: Long) {
-        helper.del(getPasswordRecoveryKey(challengeUUID))
-        helper.del(getUserActiveRecoveryChallengeKey(userId))
+        helper.expire(userActiveChallengeKey, ttl)
     }
 
     override fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge? {
@@ -64,5 +53,10 @@ class AuthEmailRepositoryImpl(
 
     override fun getUserActiveRecoverPasswordChallengeUUID(userId: Long): String? {
         return helper.get(getUserActiveRecoveryChallengeKey(userId), String::class.java)
+    }
+
+    override fun deleteRecoverPasswordChallenge(challengeUUID: String, userId: Long) {
+        helper.del(getPasswordRecoveryKey(challengeUUID))
+        helper.del(getUserActiveRecoveryChallengeKey(userId))
     }
 }

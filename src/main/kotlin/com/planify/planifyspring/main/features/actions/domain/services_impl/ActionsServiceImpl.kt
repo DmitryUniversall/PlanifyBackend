@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.actions.domain.services_impl
 
 import com.planify.planifyspring.core.exceptions.InvalidArgumentAppError
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
+import com.planify.planifyspring.main.features.actions.domain.exceptions.BadActionIdHttpException
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import org.springframework.stereotype.Service
@@ -24,16 +25,31 @@ class ActionsServiceImpl(
     }
 
     override fun deleteAction(scope: String, actionId: String) {
-        actionsRepository.deleteAction(scope, actionId)
+        try {
+            actionsRepository.deleteAction(scope, actionId)
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid actionId specified: $actionId")
+        }
     }
 
     override fun deleteUserAction(userId: Long, actionId: String) {
-        val scope = getUserActionsScope(userId)
-        deleteAction(scope, actionId)
+        deleteAction(getUserActionsScope(userId), actionId)
     }
 
     override fun getIncomingActions(scope: String, lastSeen: String, count: Long, timeout: Long): List<Action> {
-        return actionsRepository.getIncomingActions(scope, lastSeen, count, timeout)
+        try {
+            return actionsRepository.getIncomingActions(scope, lastSeen, count, timeout)
+        } catch (_: InvalidArgumentAppError) {
+            throw BadActionIdHttpException("Invalid lastSeen action id specified: $lastSeen")
+        }
+    }
+
+    override fun getUserIncomingActions(userId: Long, lastSeen: String, count: Long, timeout: Long): List<Action> {
+        return if (lastSeen.contains("===")) {
+            getUserIncomingActionsUsingLastSeenId(userId, lastSeen, count, timeout)
+        } else {
+            getUserIncomingActionsUsingRecordId(userId, lastSeen, count, timeout)
+        }
     }
 
     override fun getUserIncomingActionsUsingRecordId(
@@ -53,7 +69,7 @@ class ActionsServiceImpl(
         timeout: Long
     ): List<Action> {
         val idParts = actionId.split("===")
-        if (idParts.size != 2) throw InvalidArgumentAppError("Invalid action id: $actionId")
+        if (idParts.size != 2) throw BadActionIdHttpException("Invalid action id: $actionId")
 
         val scope = getUserActionsScope(userId)
         return getIncomingActions(scope, idParts[1], count, timeout)

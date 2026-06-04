@@ -2,9 +2,10 @@ package com.planify.planifyspring.main.features.profiles.routing
 
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
+import com.planify.planifyspring.main.exceptions.generics.NotFoundHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.profiles.domain.schemas.PatchProfileSchema
-import com.planify.planifyspring.main.features.profiles.domain.use_cases.ProfilesUseCaseGroup
+import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.GetProfileResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.patch.PatchProfileRequestDTO
@@ -20,13 +21,14 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/profiles")
 class MyProfileController(
-    private val profilesUseCaseGroup: ProfilesUseCaseGroup
+    private val profilesService: ProfilesService
 ) {
     @GetMapping("/my")
     fun getProfile(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<GetProfileResponseDTO>> {
-        val profile = profilesUseCaseGroup.getProfileById(authContext.user.id)
+        val profile = profilesService.getProfileById(authContext.user.id)
+            ?: throw NotFoundHttpException("Profile for this user ${authContext.user.id} was not found")
 
         return ResponseEntity.ok(
             GetProfileResponseDTO(
@@ -40,13 +42,15 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @Valid @RequestBody body: PatchProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesUseCaseGroup.patchProfile(authContext.user.id, PatchProfileSchema(
-            firstName = body.firstName,
-            lastName = body.lastName,
-            position = body.position,
-            department = body.department,
-            profileImageUrl = body.profileImageUrl
-        ))
+        profilesService.patchProfile(
+            authContext.user.id, PatchProfileSchema(
+                firstName = body.firstName,
+                lastName = body.lastName,
+                position = body.position,
+                department = body.department,
+                profileImageUrl = body.profileImageUrl
+            )
+        )
 
         return ResponseEntity.ok(ApplicationResponse.success())
     }
@@ -56,23 +60,25 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext,
         @RequestBody body: UpdateProfileRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        profilesUseCaseGroup.patchProfile(authContext.user.id, PatchProfileSchema(
-            firstName = body.firstName,
-            lastName = body.lastName,
-            position = body.position,
-            department = body.department,
-            profileImageUrl = body.profileImageUrl
-        ))
+        profilesService.patchProfile(
+            authContext.user.id, PatchProfileSchema(
+                firstName = body.firstName,
+                lastName = body.lastName,
+                position = body.position,
+                department = body.department,
+                profileImageUrl = body.profileImageUrl
+            )
+        )
 
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @GetMapping("/search")  // Public endpoint?
+    @GetMapping("/search")
     fun search(
         @PageableDefault pageable: Pageable,
         @RequestParam query: String,
     ): ResponseEntity<ApplicationResponse<SearchProfilesResponseDTO>> {
-        val result = profilesUseCaseGroup.search(query, pageable)
+        val result = profilesService.search(query, pageable)
 
         return ResponseEntity.ok(
             SearchProfilesResponseDTO(

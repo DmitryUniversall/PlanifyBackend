@@ -3,24 +3,25 @@ package com.planify.planifyspring.main.features.auth.routing
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
-import com.planify.planifyspring.main.features.auth.domain.use_cases.AuthUseCaseGroup
+import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.routing.dto.*
 import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationResponseDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.create_new_password.CreateNewPasswordRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_auth_context.GetAuthContextResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryRequestDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.create_new_password.CreateNewPasswordRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.submit_recover_password_code.SubmitRecoverPasswordCodeRequestDTO
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import jakarta.validation.Valid
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
@@ -28,14 +29,14 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/auth")
 class AuthFeatureController(
-    val authUseCaseGroup: AuthUseCaseGroup
+    val authService: AuthService
 ) {
     @PostMapping("/login")
     fun login(
         @RequestHeader("User-Agent") userAgent: String,
         @RequestBody body: LoginRequestDTO
     ): ResponseEntity<ApplicationResponse<LoginResponseDTO>> {
-        val (info, tokens) = authUseCaseGroup.login(
+        val (info, tokens) = authService.login(
             email = body.email,
             passwordRaw = body.password,
             userAgent = userAgent,
@@ -57,7 +58,7 @@ class AuthFeatureController(
         @RequestHeader("User-Agent") userAgent: String,
         @Valid @RequestBody body: ConfirmRegistrationRequestDTO
     ): ResponseEntity<ApplicationResponse<ConfirmRegistrationResponseDTO>> {
-        val (info, tokens) = authUseCaseGroup.confirmRegistration(
+        val (info, tokens) = authService.confirmRegistration(
             userAgent = userAgent,
             code = body.code,
             clientName = body.clientName,
@@ -79,12 +80,15 @@ class AuthFeatureController(
         @RequestHeader("User-Agent") userAgent: String,
         @Valid @RequestBody body: RegisterRequestDTO
     ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
-        val confirmationUUID = authUseCaseGroup.register(
+        val locale = LocaleContextHolder.getLocale()
+
+        val confirmationUUID = authService.register(
             email = body.email,
             username = body.username,
             passwordRaw = body.password,
             userAgent = userAgent,
             clientName = body.clientName,
+            locale = locale,
             createProfileSchema = CreateProfileSchema(
                 firstName = body.firstName,
                 lastName = body.lastName,
@@ -101,12 +105,22 @@ class AuthFeatureController(
         )
     }
 
+    @PostMapping("/register/resend")
+    fun resendRegisterConfirmation(
+        @RequestParam confirmationUuid: String
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        val locale = LocaleContextHolder.getLocale()
+
+        authService.resendRegisterConfirmation(confirmationUuid = confirmationUuid, locale = locale)
+        return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
     @PostMapping("/refresh")
     fun refresh(
         @RequestHeader("User-Agent") userAgent: String,
         @RequestBody body: RefreshRequestDTO
     ): ResponseEntity<ApplicationResponse<RefreshResponseDTO>> {
-        val tokens = authUseCaseGroup.refresh(
+        val tokens = authService.refresh(
             refreshToken = body.refreshToken,
             currentUserAgent = userAgent
         )
@@ -123,7 +137,7 @@ class AuthFeatureController(
     fun logout(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authUseCaseGroup.revokeSession(userId = authContext.user.id, sessionUuid = authContext.session.uuid)
+        authService.revokeSession(userId = authContext.user.id, sessionUuid = authContext.session.uuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -132,7 +146,7 @@ class AuthFeatureController(
         @PathVariable sessionUuid: String,
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authUseCaseGroup.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
+        authService.revokeSession(userId = authContext.user.id, sessionUuid = sessionUuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -140,7 +154,7 @@ class AuthFeatureController(
     fun getUserSessions(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<GetSessionsResponseDTO>> {
-        val sessions = authUseCaseGroup.getActiveUserSessions(authContext.user.id)
+        val sessions = authService.getActiveUserSessions(authContext.user.id)
 
         return ResponseEntity.ok(
             GetSessionsResponseDTO(
@@ -152,11 +166,11 @@ class AuthFeatureController(
     fun revokeAllSessionsExceptCurrent(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        val sessions = authUseCaseGroup.getActiveUserSessions(authContext.user.id)
+        val sessions = authService.getActiveUserSessions(authContext.user.id)
 
-        sessions.forEach { // TODO: Optimise it?
+        sessions.forEach {
             if (it.uuid == authContext.session.uuid) return@forEach
-            authUseCaseGroup.revokeSession(authContext.user.id, it.uuid)
+            authService.revokeSession(authContext.user.id, it.uuid)
         }
 
         return ResponseEntity.ok(ApplicationResponse.success())
@@ -174,10 +188,12 @@ class AuthFeatureController(
     }
 
     @PostMapping("/recovery/password/challenge")
-    fun recoverPassword(
+    fun startRecoverPasswordChallenge(
         @RequestBody body: PasswordRecoveryRequestDTO
     ): ResponseEntity<ApplicationResponse<PasswordRecoveryResponseDTO>> {
-        val challengeUUID = authUseCaseGroup.startRecoverPasswordChallenge(email = body.email)
+        val locale = LocaleContextHolder.getLocale()
+
+        val challengeUUID = authService.startRecoverPasswordChallenge(email = body.email, locale = locale)
 
         return ResponseEntity.ok(
             PasswordRecoveryResponseDTO(
@@ -190,7 +206,7 @@ class AuthFeatureController(
     fun submitRecoverPasswordCode(
         @RequestBody body: SubmitRecoverPasswordCodeRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authUseCaseGroup.checkRecoverPasswordChallengeCode(challengeUUID = body.challengeUUID, code = body.code)
+        authService.checkRecoverPasswordChallengeCode(challengeUUID = body.challengeUUID, code = body.code)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -198,7 +214,7 @@ class AuthFeatureController(
     fun createNewPassword(
         @RequestBody body: CreateNewPasswordRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authUseCaseGroup.recoverPassword(challengeUUID = body.challengeUUID, newPassword = body.newPassword)
+        authService.recoverPassword(challengeUUID = body.challengeUUID, newPassword = body.newPassword)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 }

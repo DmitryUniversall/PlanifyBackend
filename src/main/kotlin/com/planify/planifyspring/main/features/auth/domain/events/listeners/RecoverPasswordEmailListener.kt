@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import org.thymeleaf.context.Context
-import java.util.*
+import java.util.Locale
 
 @Component
 class RecoverPasswordEmailListener(
@@ -18,16 +18,14 @@ class RecoverPasswordEmailListener(
     @Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun on(event: RecoverPasswordEmailRequestedEvent) {
-        val context = Context().apply {
+        val locale = event.locale ?: Locale.ENGLISH
+
+        val context = Context(locale).apply {
             setVariable("verificationCode", event.code)
-            setVariable("expiryMinutes", 20)  // FIXME: Hardcoded
+            setVariable("expiryMinutes", event.expiryMinutes)
         }
 
-        val subject = messageSource.getMessage(
-            /* code = */ "email.registration.subject",
-            /* args = */ null,
-            /* locale = */ event.locale ?: Locale.getDefault(),
-        )
+        val subject = messageSource.getMessage("email.password-reset.subject", null, locale)
 
         emailService.sendFormattedHtmlMessage(event.email, subject, "auth/recovery", context)
     }

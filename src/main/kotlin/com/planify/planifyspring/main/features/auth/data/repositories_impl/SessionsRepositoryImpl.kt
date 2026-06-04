@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.auth.data.repositories_impl
 
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.common.utils.redis.RedisHelper
+import com.planify.planifyspring.main.features.auth.data.dto.AuthSessionDTO
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthSession
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import org.springframework.stereotype.Repository
@@ -27,7 +28,7 @@ class SessionsRepositoryImpl(
     private fun writeSession(session: AuthSession) {
         helper.hset(
             key = getUserSessionKey(userId = session.userId, sessionUuid = session.uuid),
-            value = session
+            value = AuthSessionDTO.fromEntity(session)
         )
     }
 
@@ -62,15 +63,15 @@ class SessionsRepositoryImpl(
     ): AuthSession? {
         return helper.hget(
             key = getUserSessionKey(userId, sessionUuid),
-            clazz = AuthSession::class.java
-        )
+            clazz = AuthSessionDTO::class.java
+        )?.toEntity()
     }
 
     override fun getUserSessions(userId: Long): List<AuthSession> {
         return helper.hgetAllSubkeys(
             base = "${getUserSessionsKey(userId)}:*",
-            clazz = AuthSession::class.java
-        )
+            clazz = AuthSessionDTO::class.java
+        ).map { it.toEntity() }
     }
 
     override fun getActiveUserSessions(userId: Long): List<AuthSession> {
