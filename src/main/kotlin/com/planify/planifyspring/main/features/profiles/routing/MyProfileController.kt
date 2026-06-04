@@ -7,7 +7,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
 import com.planify.planifyspring.main.features.profiles.domain.schemas.PatchProfileSchema
 import com.planify.planifyspring.main.features.profiles.domain.services.ProfilesService
 import com.planify.planifyspring.main.features.profiles.routing.dto.ProfileDTO
-import com.planify.planifyspring.main.features.profiles.routing.dto.get_profile.GetProfileResponseDTO
+import com.planify.planifyspring.main.features.profiles.routing.dto.GetProfileResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.patch.PatchProfileRequestDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.search.SearchProfilesResponseDTO
 import com.planify.planifyspring.main.features.profiles.routing.dto.update.UpdateProfileRequestDTO
@@ -28,7 +28,21 @@ class MyProfileController(
         @AuthenticationPrincipal authContext: AuthContext
     ): ResponseEntity<ApplicationResponse<GetProfileResponseDTO>> {
         val profile = profilesService.getProfileById(authContext.user.id)
-            ?: throw NotFoundHttpException("Profile for this user ${authContext.user.id} was not found")
+            ?: throw NotFoundHttpException("Profile for current user was not found")  // This should not happen
+
+        return ResponseEntity.ok(
+            GetProfileResponseDTO(
+                profile = ProfileDTO.fromEntity(profile)
+            ).asSuccessApplicationResponse()
+        )
+    }
+
+    @GetMapping("/{userId}")
+    fun getProfileById(
+        @PathVariable userId: Long,
+    ): ResponseEntity<ApplicationResponse<GetProfileResponseDTO>> {
+        val profile = profilesService.getProfileById(userId)
+            ?: throw NotFoundHttpException("Profile for user $userId was not found")
 
         return ResponseEntity.ok(
             GetProfileResponseDTO(
