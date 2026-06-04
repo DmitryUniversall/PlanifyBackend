@@ -16,7 +16,7 @@ import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingI
 import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingPolicy
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingInvitesRepository
 import com.planify.planifyspring.main.features.meetings.domain.schemas.InviteRescheduleStatusDataScheme
-import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInviteParchSchema
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInvitePatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.schemas.actions.*
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingInvitesService
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
@@ -112,7 +112,7 @@ class MeetingInvitesServiceImpl(
 
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.ACCEPTED)
+            patch = MeetingInvitePatchSchema(status = MeetingInviteStatus.ACCEPTED)
         )
 
         meetingsService.createMeetingParticipant(invite.meetingId, invite.targetId)
@@ -166,7 +166,7 @@ class MeetingInvitesServiceImpl(
 
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.REJECTED)
+            patch = MeetingInvitePatchSchema(status = MeetingInviteStatus.REJECTED)
         )
 
         actionsService.createUserAction(
@@ -208,7 +208,7 @@ class MeetingInvitesServiceImpl(
 
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(
+            patch = MeetingInvitePatchSchema(
                 status = MeetingInviteStatus.RESCHEDULE_REQUESTED,
                 statusData = InviteRescheduleStatusDataScheme(rescheduleTo = rescheduleTo)
             )
@@ -251,7 +251,7 @@ class MeetingInvitesServiceImpl(
 
         meetingInvitesRepository.updateInvite(
             inviteUuid = invite.uuid,
-            patch = MeetingInviteParchSchema(status = MeetingInviteStatus.PENDING)
+            patch = MeetingInvitePatchSchema(status = MeetingInviteStatus.PENDING)
         )
 
         if (shouldReschedule) {

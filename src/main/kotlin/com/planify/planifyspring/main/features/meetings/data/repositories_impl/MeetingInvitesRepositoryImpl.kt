@@ -4,7 +4,7 @@ import com.planify.planifyspring.main.common.utils.redis.RedisHelper
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingInvitesRepository
-import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInviteParchSchema
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInvitePatchSchema
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
@@ -47,7 +47,7 @@ class MeetingInvitesRepositoryImpl(
         return redisHelper.hget(getInviteKey(uuid), MeetingInvite::class.java)
     }
 
-    override fun updateInvite(inviteUuid: String, patch: MeetingInviteParchSchema) {
+    override fun updateInvite(inviteUuid: String, patch: MeetingInvitePatchSchema) {
         val key = getInviteKey(inviteUuid)
 
         patch.status?.let { redisHelper.hsetField(key, "status", patch.status) }

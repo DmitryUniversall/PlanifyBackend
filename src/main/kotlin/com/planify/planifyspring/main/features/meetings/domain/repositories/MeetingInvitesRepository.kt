@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.domain.repositories
 
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
-import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInviteParchSchema
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingInvitePatchSchema
 import java.time.Instant
 
 interface MeetingInvitesRepository {
@@ -9,7 +9,7 @@ interface MeetingInvitesRepository {
 
     fun getInvite(uuid: String): MeetingInvite?
 
-    fun updateInvite(inviteUuid: String, patch: MeetingInviteParchSchema)
+    fun updateInvite(inviteUuid: String, patch: MeetingInvitePatchSchema)
 
     fun getMeetingInvites(meetingId: Long): List<MeetingInvite>
 }
