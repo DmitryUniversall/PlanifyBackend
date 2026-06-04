@@ -5,6 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
+    <!-- 01 -->
+
     <include file="/db/changelog/01/authorities.changelog.xml"/>
     <include file="db/changelog/01/roles.changelog.xml"/>
     <include file="db/changelog/01/users.changelog.xml"/>
@@ -12,10 +14,22 @@
     <include file="db/changelog/01/meetings.changelog.xml"/>
     <include file="db/changelog/01/meeting_participants.changelog.xml"/>
 
+    <!-- 02 -->
+
+    <include file="db/changelog/02/favorites.changelog.xml"/>
+
+
+
+    <!-- 01 data -->
+
     <include file="/db/changelog/01/data/authorities-data.xml"/>
     <include file="/db/changelog/01/data/roles-data.xml"/>
     <include file="/db/changelog/01/data/users-data.xml"/>
     <include file="/db/changelog/01/data/profiles-data.xml"/>
     <include file="/db/changelog/01/data/meetings-data.xml"/>
     <include file="db/changelog/01/data/meeting_participants-data.xml"/>
+
+    <!-- 02 data -->
+    <include file="db/changelog/02/data/favorites-data.xml"/>
+
 </databaseChangeLog>
