@@ -72,7 +72,8 @@ class MeetingsController(
         meetingPolicy.assertCanView(
             requesterId = authContext.user.id,
             meeting = meeting,
-            isParticipant = meetingsService.isUserParticipant(authContext.user.id, meetingId)
+            isParticipant = meetingsService.isUserParticipant(authContext.user.id, meetingId),
+            isInvited = meetingInvitesService.isUserInvited(meetingId, authContext.user.id)
         )
 
         return ResponseEntity.ok(
@@ -88,14 +89,16 @@ class MeetingsController(
         @PathVariable meetingId: Long,
     ): ResponseEntity<ApplicationResponse<GetMeetingWithContextResponseDTO>> {
         val meetingWithParticipantIds = meetingsService.getMeetingWithParticipantIds(meetingId)
-        meetingPolicy.assertCanView(
-            requesterId = authContext.user.id,
-            meeting = meetingWithParticipantIds.meeting,
-            isParticipant = meetingWithParticipantIds.participantIds.contains(authContext.user.id)
-        )
 
         val invites = meetingInvitesService.getMeetingInvites(meetingWithParticipantIds.meeting.id)
             .map { MeetingInviteDTO.fromEntity(it) }
+
+        meetingPolicy.assertCanView(
+            requesterId = authContext.user.id,
+            meeting = meetingWithParticipantIds.meeting,
+            isParticipant = meetingWithParticipantIds.participantIds.contains(authContext.user.id),
+            isInvited = invites.any { it.targetId == authContext.user.id }
+        )
 
         val participantProfiles = meetingWithParticipantIds.participantIds.map { profileDtoOf(it) }  // TODO: Optimise via batch db query
 
@@ -124,7 +127,8 @@ class MeetingsController(
         meetingPolicy.assertCanView(
             requesterId = authContext.user.id,
             meeting = info.meeting,
-            isParticipant = info.participantIds.contains(authContext.user.id)
+            isParticipant = info.participantIds.contains(authContext.user.id),
+            isInvited = meetingInvitesService.isUserInvited(meetingId, authContext.user.id)
         )
 
         return ResponseEntity.ok(

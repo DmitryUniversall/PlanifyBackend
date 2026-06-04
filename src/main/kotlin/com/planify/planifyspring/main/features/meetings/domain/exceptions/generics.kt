@@ -1,16 +1,12 @@
 package com.planify.planifyspring.main.features.meetings.domain.exceptions
 
-import com.planify.planifyspring.core.exceptions.AccessDeniedAppError
-import com.planify.planifyspring.core.exceptions.AlreadyExistsAppError
-import com.planify.planifyspring.core.exceptions.ExpiredAppError
-import com.planify.planifyspring.core.exceptions.NotFoundAppError
-import com.planify.planifyspring.core.exceptions.UnprocessableEntityAppError
+import com.planify.planifyspring.core.exceptions.*
 
 class MeetingNotFoundAppError(message: String = "Meeting was not found") : NotFoundAppError(message)
 class InviteNotFoundAppError(message: String = "Invite was not found") : NotFoundAppError(message)
 
 class NotMeetingOwnerAppError(message: String = "You are not the owner of this meeting") : AccessDeniedAppError(message)
-class NotMeetingParticipantAppError(message: String = "You are not a participant of this meeting") : AccessDeniedAppError(message)
+class MeetingAccessDeniedAppError(message: String = "You are not allowed to read this meeting") : AccessDeniedAppError(message)
 class NotInviteTargetAppError(message: String = "You are not the target of this invite") : AccessDeniedAppError(message)
 class NotInviteSenderAppError(message: String = "You are not the sender of this invite") : AccessDeniedAppError(message)
 class InviteAccessDeniedAppError(message: String = "You cannot access this invite") : AccessDeniedAppError(message)

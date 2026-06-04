@@ -289,4 +289,9 @@ class MeetingInvitesServiceImpl(
             )
         )
     }
+
+    @Transactional(readOnly = true)
+    override fun isUserInvited(meetingId: Long, userId: Long): Boolean {
+        return getMeetingInvites(meetingId).any { it.targetId == userId }
+    }
 }

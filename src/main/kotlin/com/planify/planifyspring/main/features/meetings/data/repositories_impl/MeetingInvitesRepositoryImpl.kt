@@ -60,4 +60,8 @@ class MeetingInvitesRepositoryImpl(
         val ids = redisHelper.getSet(getMeetingInvitesKey(meetingId), String::class.java)
         return ids.map { getInvite(it)!! }
     }
+
+    override fun isUserInvited(meetingId: Long, userId: Long): Boolean {
+        return getMeetingInvites(meetingId).any { it.targetId == userId }
+    }
 }
