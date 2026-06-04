@@ -1,4 +1,4 @@
-package com.planify.planifyspring.main.features.email.domain.config
+package com.planify.planifyspring.main.config.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

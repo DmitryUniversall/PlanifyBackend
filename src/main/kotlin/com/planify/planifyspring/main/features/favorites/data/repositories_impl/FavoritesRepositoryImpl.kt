@@ -5,7 +5,7 @@ import com.planify.planifyspring.main.features.favorites.data.models.FavoriteMod
 import com.planify.planifyspring.main.features.favorites.domain.entities.FavoriteRecord
 import com.planify.planifyspring.main.features.favorites.domain.repositories.FavoritesRepository
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import java.time.Instant
 
 @Repository
 class FavoritesRepositoryImpl(
@@ -19,7 +19,7 @@ class FavoritesRepositoryImpl(
         val model = FavoriteModel(
             userId = userId,
             favoriteUserId = favoriteUserId,
-            createdAt = LocalDateTime.now()
+            createdAt = Instant.now()
         )
 
         jpaRepository.save(model)

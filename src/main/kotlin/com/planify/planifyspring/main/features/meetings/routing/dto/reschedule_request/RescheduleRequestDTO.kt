@@ -1,7 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_request
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 data class RescheduleRequestDTO(
-    val rescheduleTo: LocalDateTime
+    val rescheduleTo: Instant
 )

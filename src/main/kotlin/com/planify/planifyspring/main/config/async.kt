@@ -10,15 +10,20 @@ import java.util.concurrent.Executor
 @EnableAsync
 class AsyncConfig {
     @Bean("mailExecutor")
-    fun mailExecutor(): Executor {
-        val executor = ThreadPoolTaskExecutor()
+    fun mailExecutor(): Executor = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 2
+        maxPoolSize = 5
+        queueCapacity = 100
+        setThreadNamePrefix("planify-mail-")
+        initialize()
+    }
 
-        executor.corePoolSize = 2
-        executor.maxPoolSize = 5
-        executor.queueCapacity = 100
-        executor.setThreadNamePrefix("planify-mail-")
-        executor.initialize()
-
-        return executor
+    @Bean("pushTaskExecutor")
+    fun pushTaskExecutor() = ThreadPoolTaskExecutor().apply {
+        corePoolSize = 2
+        maxPoolSize = 10
+        queueCapacity = 500
+        setThreadNamePrefix("planify-push-")
+        initialize()
     }
 }

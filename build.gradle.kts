@@ -48,6 +48,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
+    implementation("com.google.firebase:firebase-admin:9.9.0")
+
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+           http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.21.xsd">
+
+    <!--  Tokens  -->
+    <changeSet id="fcm_tokens-1" author="universall">
+        <createTable tableName="fcm_tokens">
+            <column name="token" type="VARCHAR(1024)">
+                <constraints primaryKey="true" primaryKeyName="pk_fcm_tokens" nullable="false"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="platform" type="VARCHAR(32)" defaultValue="android">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--  FK Users  -->
+    <changeSet id="fcm_tokens-2" author="universall">
+        <addForeignKeyConstraint baseTableName="fcm_tokens"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="users"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_fcm_token_user"/>
+
+        <createIndex indexName="idx_fcm_tokens_user_id" tableName="fcm_tokens">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

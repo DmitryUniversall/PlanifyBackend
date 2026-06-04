@@ -2,14 +2,17 @@ package com.planify.planifyspring.main.features.actions.domain.services_impl
 
 import com.planify.planifyspring.core.exceptions.InvalidArgumentAppError
 import com.planify.planifyspring.main.features.actions.domain.entities.Action
+import com.planify.planifyspring.main.features.actions.domain.events.ActionCreatedEvent
 import com.planify.planifyspring.main.features.actions.domain.exceptions.BadActionIdHttpException
 import com.planify.planifyspring.main.features.actions.domain.repositories.ActionsRepository
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 
 @Service
 class ActionsServiceImpl(
-    val actionsRepository: ActionsRepository
+    val actionsRepository: ActionsRepository,
+    val eventPublisher: ApplicationEventPublisher
 ) : ActionsService {
     override fun getUserActionsScope(userId: Long): String {
         return "users:$userId"
@@ -21,7 +24,11 @@ class ActionsServiceImpl(
 
     override fun createUserAction(userId: Long, type: String, data: Any): Action {
         val scope = getUserActionsScope(userId)
-        return createAction(scope, type, data)
+        val action = createAction(scope, type, data)
+
+        eventPublisher.publishEvent(ActionCreatedEvent(userId, action))
+
+        return action
     }
 
     override fun deleteAction(scope: String, actionId: String) {

@@ -1,6 +1,5 @@
 package com.planify.planifyspring.main.features.meetings.routing
 
-import com.planify.planifyspring.core.utils.asUTCInstant
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.common.utils.asSuccessApplicationResponse
 import com.planify.planifyspring.main.features.auth.domain.entities.AuthContext
@@ -96,7 +95,7 @@ class MeetingInvitesController(
         meetingInvitesService.requestRescheduleInvite(
             inviteUuid = inviteUuid,
             requesterId = authContext.user.id,
-            rescheduleTo = body.rescheduleTo.asUTCInstant()
+            rescheduleTo = body.rescheduleTo
         )
 
         return ResponseEntity.ok(ApplicationResponse.success())

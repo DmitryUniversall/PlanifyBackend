@@ -1,6 +1,6 @@
 package com.planify.planifyspring.main.features.email.domain.services_impl
 
-import com.planify.planifyspring.main.features.email.domain.config.EmailServiceConfiguration
+import com.planify.planifyspring.main.config.properties.EmailServiceConfiguration
 import com.planify.planifyspring.main.features.email.domain.services.EmailService
 import org.springframework.core.io.ClassPathResource
 import org.springframework.mail.javamail.JavaMailSender

@@ -2,7 +2,7 @@ package com.planify.planifyspring.main.features.favorites.data.models
 
 import com.planify.planifyspring.main.features.favorites.domain.entities.FavoriteRecord
 import jakarta.persistence.*
-import java.time.LocalDateTime
+import java.time.Instant
 
 @Entity
 @Table(name = "favorites")
@@ -18,7 +18,7 @@ open class FavoriteModel(
     open var favoriteUserId: Long,
 
     @Column(nullable = false)
-    open var createdAt: LocalDateTime = LocalDateTime.now(),
+    open var createdAt: Instant,
 ) {
     fun toEntity(): FavoriteRecord {
         return FavoriteRecord(
