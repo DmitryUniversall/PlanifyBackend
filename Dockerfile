@@ -14,6 +14,7 @@ FROM eclipse-temurin:17-jre AS runtime
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
+COPY secrets/fcm/planify-firebase-fbsvc.json secrets/fcm/planify-firebase-fbsvc.json
 
 EXPOSE 8855
 
