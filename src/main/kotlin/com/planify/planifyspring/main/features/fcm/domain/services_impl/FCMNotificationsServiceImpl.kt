@@ -59,13 +59,13 @@ class FCMNotificationsServiceImpl(
         userId: Long,
         title: String,
         body: String,
-        data: Map<String, String> = emptyMap(),
+        data: Map<String, String>? = null,
     ) {
         val notification = Notification.builder()
             .setTitle(title)
             .setBody(body)
             .build()
 
-        dispatch(userId, notification = notification, data = data)
+        dispatch(userId, notification = notification, data = data ?: emptyMap())
     }
 }

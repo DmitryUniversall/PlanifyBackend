@@ -170,12 +170,14 @@ class AuthServiceImpl(
         username: String,
         email: String,
         passwordRaw: String,
+        locale: Locale,
         createProfileSchema: CreateProfileSchema
     ): User {
         val user = usersRepository.create(
             username = username,
             email = email,
-            passwordHash = SecurityHelper.hashPassword(passwordRaw)
+            passwordHash = SecurityHelper.hashPassword(passwordRaw),
+            locale = locale
         )
 
         profilesService.createProfile(user.id, createProfileSchema)
@@ -306,9 +308,9 @@ class AuthServiceImpl(
         userAgent: String,
         clientName: String,
         sessionName: String?,
-        locale: Locale?
+        locale: Locale
     ): String {
-        val user = createUser(username, email, passwordRaw, createProfileSchema)
+        val user = createUser(username, email, passwordRaw, locale, createProfileSchema)
 
         val info = generateRegisterConfirmationInfo(userId = user.id, email = email)
         authEmailRepository.saveRegisterConfirmationInfo(info, REGISTRATION_CONFIRMATION_TTL)
@@ -440,5 +442,9 @@ class AuthServiceImpl(
 
     override fun getAllUsersPaginated(pageable: Pageable): Page<User> {
         return usersRepository.getAllUsersPaginated(pageable)
+    }
+
+    override fun getUserLocaleById(userId: Long): Locale {
+        return getUserById(userId).locale  // Users are cached, so this operation is still fast
     }
 }

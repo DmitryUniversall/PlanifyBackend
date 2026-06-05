@@ -11,6 +11,7 @@ data class RegisterRequestDTO(
     val lastName: String,
     val position: String? = null,
     val department: String? = null,
+    val locale: String? = null,
 
     @field:URL(
         protocol = "https",

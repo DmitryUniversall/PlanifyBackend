@@ -1,11 +1,13 @@
 package com.planify.planifyspring.main.features.auth.domain.entities
 
 import java.io.Serializable
+import java.util.*
 
 data class User(
     val id: Long,
     val username: String,
     val email: String,
     val passwordHash: String,
-    val isActivated: Boolean = false
+    val isActivated: Boolean = false,
+    val locale: Locale
 ) : Serializable

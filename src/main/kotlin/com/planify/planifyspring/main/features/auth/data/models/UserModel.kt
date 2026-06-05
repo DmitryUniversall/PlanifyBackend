@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.features.auth.data.models
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import jakarta.persistence.*
+import java.util.Locale
 
 @Entity
 @Table(name = "users")
@@ -23,6 +24,9 @@ open class UserModel(
     @Column(name = "is_activated", nullable = false)
     open var isActivated: Boolean = false,
 
+    @Column(name = "locale", length = 35, nullable = false)
+    open var locale: String = "en",
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
@@ -37,7 +41,7 @@ open class UserModel(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "authority_id")]
     )
-    open var authorities: MutableSet<AuthorityModel> = mutableSetOf(),
+    open var authorities: MutableSet<AuthorityModel> = mutableSetOf()
 ) {
     companion object {
         fun fromEntity(entity: User): UserModel {
@@ -57,7 +61,8 @@ open class UserModel(
             username = username,
             email = email,
             passwordHash = passwordHash,
-            isActivated = isActivated
+            isActivated = isActivated,
+            locale = Locale.forLanguageTag(locale)
         )
     }
 

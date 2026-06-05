@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import tools.jackson.databind.ObjectMapper
+import java.util.Locale
 
 @Repository
 class UsersRepositoryImpl(
@@ -31,11 +32,12 @@ class UsersRepositoryImpl(
         cacheManager.getCache("usersWithAccess")?.evict(id.toString())
     }
 
-    override fun create(username: String, email: String, passwordHash: String): User {
+    override fun create(username: String, email: String, passwordHash: String, locale: Locale): User {
         val model = UserModel(
             username = username,
             email = email,
-            passwordHash = passwordHash
+            passwordHash = passwordHash,
+            locale = locale.toLanguageTag()
         )
 
         if (userJpaRepository.existsByEmailOrUsername(email, username)) throw AlreadyExistsAppError("User with this email or username already exists")

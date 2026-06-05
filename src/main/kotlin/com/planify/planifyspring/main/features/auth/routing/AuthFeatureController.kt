@@ -7,17 +7,17 @@ import com.planify.planifyspring.main.features.auth.domain.services.AuthService
 import com.planify.planifyspring.main.features.auth.routing.dto.*
 import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.confrim_registration.ConfirmRegistrationResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.create_new_password.CreateNewPasswordRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_auth_context.GetAuthContextResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.get_user_sessions.GetSessionsResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.login.LoginResponseDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryRequestDTO
+import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.refresh.RefreshResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterRequestDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.register.RegisterResponseDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.create_new_password.CreateNewPasswordRequestDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryRequestDTO
-import com.planify.planifyspring.main.features.auth.routing.dto.password_recovery.PasswordRecoveryResponseDTO
 import com.planify.planifyspring.main.features.auth.routing.dto.submit_recover_password_code.SubmitRecoverPasswordCodeRequestDTO
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
 import jakarta.validation.Valid
@@ -25,6 +25,7 @@ import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/auth")
@@ -53,6 +54,34 @@ class AuthFeatureController(
         )
     }
 
+    @PostMapping("/register")
+    fun register(
+        @RequestHeader("User-Agent") userAgent: String,
+        @Valid @RequestBody body: RegisterRequestDTO
+    ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
+        val confirmationUUID = authService.register(
+            email = body.email,
+            username = body.username,
+            passwordRaw = body.password,
+            userAgent = userAgent,
+            clientName = body.clientName,
+            locale = body.locale?.let { Locale.forLanguageTag(it) } ?: LocaleContextHolder.getLocale(),
+            createProfileSchema = CreateProfileSchema(
+                firstName = body.firstName,
+                lastName = body.lastName,
+                position = body.position,
+                department = body.department,
+                profileImageUrl = body.profileImageUrl
+            )
+        )
+
+        return ResponseEntity.ok(
+            RegisterResponseDTO(
+                confirmationUUID = confirmationUUID,
+            ).asSuccessApplicationResponse()
+        )
+    }
+
     @PostMapping("/register/confirm")
     fun confirmRegistration(
         @RequestHeader("User-Agent") userAgent: String,
@@ -71,36 +100,6 @@ class AuthFeatureController(
                 session = AuthSessionPrivateDTO.fromEntity(info.session),
                 tokens = AuthTokenPairDTO.fromEntity(tokens),
                 accessInfo = AccessInfoDTO.fromEntity(info.accessInfo)
-            ).asSuccessApplicationResponse()
-        )
-    }
-
-    @PostMapping("/register")
-    fun register(
-        @RequestHeader("User-Agent") userAgent: String,
-        @Valid @RequestBody body: RegisterRequestDTO
-    ): ResponseEntity<ApplicationResponse<RegisterResponseDTO>> {
-        val locale = LocaleContextHolder.getLocale()
-
-        val confirmationUUID = authService.register(
-            email = body.email,
-            username = body.username,
-            passwordRaw = body.password,
-            userAgent = userAgent,
-            clientName = body.clientName,
-            locale = locale,
-            createProfileSchema = CreateProfileSchema(
-                firstName = body.firstName,
-                lastName = body.lastName,
-                position = body.position,
-                department = body.department,
-                profileImageUrl = body.profileImageUrl
-            )
-        )
-
-        return ResponseEntity.ok(
-            RegisterResponseDTO(
-                confirmationUUID = confirmationUUID,
             ).asSuccessApplicationResponse()
         )
     }

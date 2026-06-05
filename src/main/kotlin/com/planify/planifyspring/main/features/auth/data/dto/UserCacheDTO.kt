@@ -2,13 +2,15 @@ package com.planify.planifyspring.main.features.auth.data.dto
 
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import java.io.Serializable
+import java.util.Locale
 
 data class UserCacheDTO(
     val id: Long,
     val username: String,
     val email: String,
     val passwordHash: String,
-    val activated: Boolean = false
+    val activated: Boolean = false,
+    val locale: String
 ) : Serializable {
     companion object {
         fun fromEntity(entity: User): UserCacheDTO = UserCacheDTO(
@@ -16,7 +18,8 @@ data class UserCacheDTO(
             username = entity.username,
             email = entity.email,
             passwordHash = entity.passwordHash,
-            activated = entity.isActivated
+            activated = entity.isActivated,
+            locale = entity.locale.toLanguageTag()
         )
     }
 
@@ -25,6 +28,7 @@ data class UserCacheDTO(
         username = username,
         email = email,
         passwordHash = passwordHash,
-        isActivated = activated
+        isActivated = activated,
+        locale = Locale.forLanguageTag(locale)
     )
 }

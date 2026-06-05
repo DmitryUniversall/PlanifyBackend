@@ -25,7 +25,7 @@ interface AuthService {
         userAgent: String,
         clientName: String,
         sessionName: String? = null,
-        locale: Locale? = null
+        locale: Locale
     ): String
 
     fun confirmRegistration(
@@ -55,4 +55,6 @@ interface AuthService {
     fun getUserById(id: Long): User
     fun getUserByIdWithAccessInfo(id: Long): Pair<User, AccessInfo>
     fun getAllUsersPaginated(pageable: Pageable): Page<User>
+
+    fun getUserLocaleById(userId: Long): Locale
 }

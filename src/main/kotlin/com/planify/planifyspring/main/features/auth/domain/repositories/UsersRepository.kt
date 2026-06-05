@@ -4,6 +4,7 @@ import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import java.util.*
 
 interface UsersRepository {
     fun save(user: User)
@@ -11,7 +12,8 @@ interface UsersRepository {
     fun create(
         username: String,
         email: String,
-        passwordHash: String
+        passwordHash: String,
+        locale: Locale
     ): User
 
     fun getById(id: Long): User?
