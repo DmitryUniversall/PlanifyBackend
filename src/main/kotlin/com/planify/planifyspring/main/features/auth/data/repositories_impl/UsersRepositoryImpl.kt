@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
 import tools.jackson.databind.ObjectMapper
+import java.time.Instant
 import java.util.Locale
 
 @Repository
@@ -37,7 +38,8 @@ class UsersRepositoryImpl(
             username = username,
             email = email,
             passwordHash = passwordHash,
-            locale = locale.toLanguageTag()
+            locale = locale.toLanguageTag(),
+            lastPasswordRecoveredAt = Instant.now()
         )
 
         if (userJpaRepository.existsByEmailOrUsername(email, username)) throw AlreadyExistsAppError("User with this email or username already exists")

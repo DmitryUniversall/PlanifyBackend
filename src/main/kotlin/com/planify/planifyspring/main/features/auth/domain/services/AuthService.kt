@@ -45,7 +45,7 @@ interface AuthService {
     fun recoverPassword(challengeUUID: String, newPassword: String)
     fun getUserActiveRecoverPasswordChallenge(userId: Long): String?
 
-    // fun resendRecoverPasswordChallengeCode(challengeUUID: String, locale: Locale?)  // TODO
+    fun resendRecoverPasswordChallengeCode(challengeUUID: String, locale: Locale? = null)
 
     fun getSession(userId: Long, sessionUuid: String): AuthSession
     fun getUserSessions(userId: Long): List<AuthSession>

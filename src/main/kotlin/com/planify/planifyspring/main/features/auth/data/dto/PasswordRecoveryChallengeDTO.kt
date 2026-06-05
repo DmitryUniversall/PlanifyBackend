@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.auth.data.dto
 
 import com.planify.planifyspring.main.features.auth.domain.entities.PasswordRecoveryChallenge
 import com.planify.planifyspring.main.features.auth.domain.entities.PasswordRecoveryChallengeState
+import java.time.Instant
 
 data class PasswordRecoveryChallengeDTO(
     val userId: Long,
@@ -9,7 +10,9 @@ data class PasswordRecoveryChallengeDTO(
     val state: Int,
     val attempts: Int,
     val code: Int,
-    val uuid: String
+    val uuid: String,
+    val createdAt: String,
+    val updatedAt: String
 ) {
     companion object {
         fun fromEntity(entity: PasswordRecoveryChallenge) = PasswordRecoveryChallengeDTO(
@@ -18,7 +21,9 @@ data class PasswordRecoveryChallengeDTO(
             state = entity.state.ordinal,
             attempts = entity.attempts,
             code = entity.code,
-            uuid = entity.uuid
+            uuid = entity.uuid,
+            createdAt = entity.createdAt.toString(),
+            updatedAt = entity.updatedAt.toString()
         )
     }
 
@@ -28,6 +33,8 @@ data class PasswordRecoveryChallengeDTO(
         state = PasswordRecoveryChallengeState.entries[state],
         attempts = attempts,
         code = code,
-        uuid = uuid
+        uuid = uuid,
+        createdAt = Instant.parse(createdAt),
+        updatedAt = Instant.parse(updatedAt)
     )
 }

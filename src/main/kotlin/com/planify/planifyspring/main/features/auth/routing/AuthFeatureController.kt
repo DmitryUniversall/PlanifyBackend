@@ -30,7 +30,7 @@ import java.util.*
 @RestController
 @RequestMapping("/auth")
 class AuthFeatureController(
-    val authService: AuthService
+    val authService: AuthService,
 ) {
     @PostMapping("/login")
     fun login(
@@ -82,8 +82,9 @@ class AuthFeatureController(
         )
     }
 
-    @PostMapping("/register/confirm")
+    @PostMapping("/register/{confirmationUuid}/confirm")
     fun confirmRegistration(
+        @PathVariable confirmationUuid: String,
         @RequestHeader("User-Agent") userAgent: String,
         @Valid @RequestBody body: ConfirmRegistrationRequestDTO
     ): ResponseEntity<ApplicationResponse<ConfirmRegistrationResponseDTO>> {
@@ -91,7 +92,7 @@ class AuthFeatureController(
             userAgent = userAgent,
             code = body.code,
             clientName = body.clientName,
-            confirmationUuid = body.confirmationUuid,
+            confirmationUuid = confirmationUuid,
         )
 
         return ResponseEntity.ok(
@@ -104,13 +105,11 @@ class AuthFeatureController(
         )
     }
 
-    @PostMapping("/register/resend")
+    @PostMapping("/register/{confirmationUuid}/resend")
     fun resendRegisterConfirmation(
-        @RequestParam confirmationUuid: String
+        @PathVariable confirmationUuid: String
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        val locale = LocaleContextHolder.getLocale()
-
-        authService.resendRegisterConfirmation(confirmationUuid = confirmationUuid, locale = locale)
+        authService.resendRegisterConfirmation(confirmationUuid = confirmationUuid)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
@@ -186,13 +185,11 @@ class AuthFeatureController(
         )
     }
 
-    @PostMapping("/recovery/password/challenge")
+    @PostMapping("/recovery/password")
     fun startRecoverPasswordChallenge(
         @RequestBody body: PasswordRecoveryRequestDTO
     ): ResponseEntity<ApplicationResponse<PasswordRecoveryResponseDTO>> {
-        val locale = LocaleContextHolder.getLocale()
-
-        val challengeUUID = authService.startRecoverPasswordChallenge(email = body.email, locale = locale)
+        val challengeUUID = authService.startRecoverPasswordChallenge(email = body.email)
 
         return ResponseEntity.ok(
             PasswordRecoveryResponseDTO(
@@ -201,19 +198,29 @@ class AuthFeatureController(
         )
     }
 
-    @PostMapping("/recovery/password/challenge/submit")
+    @PostMapping("/recovery/password/challenge/{challengeUUID}/submit")
     fun submitRecoverPasswordCode(
+        @PathVariable challengeUUID: String,
         @RequestBody body: SubmitRecoverPasswordCodeRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authService.checkRecoverPasswordChallengeCode(challengeUUID = body.challengeUUID, code = body.code)
+        authService.checkRecoverPasswordChallengeCode(challengeUUID = challengeUUID, code = body.code)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @PostMapping("/recovery/password/challenge/recover")
+    @PostMapping("/recovery/password/challenge/{challengeUUID}/recover")
     fun createNewPassword(
+        @PathVariable challengeUUID: String,
         @RequestBody body: CreateNewPasswordRequestDTO
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authService.recoverPassword(challengeUUID = body.challengeUUID, newPassword = body.newPassword)
+        authService.recoverPassword(challengeUUID = challengeUUID, newPassword = body.newPassword)
+        return ResponseEntity.ok(ApplicationResponse.success())
+    }
+
+    @PostMapping("/recovery/password/challenge{challengeUUID}/resend")
+    fun resendRecoverPasswordChallengeCode(
+        @PathVariable challengeUUID: String
+    ): ResponseEntity<ApplicationResponse<Nothing>> {
+        authService.resendRecoverPasswordChallengeCode(challengeUUID = challengeUUID)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 }

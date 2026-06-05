@@ -2,19 +2,24 @@ package com.planify.planifyspring.main.features.auth.data.dto
 
 import com.planify.planifyspring.main.features.auth.domain.entities.RegisterConfirmationInfo
 import java.io.Serializable
+import java.time.Instant
 
 data class RegisterConfirmationInfoDTO(
     val uuid: String,
     val code: Int,
     val userId: Long,
     val email: String,
+    val createdAt: String,
+    val updatedAt: String
 ) : Serializable {
     companion object {
-        fun fromEntity(info: RegisterConfirmationInfo): RegisterConfirmationInfoDTO = RegisterConfirmationInfoDTO(
-            uuid = info.uuid,
-            code = info.code,
-            userId = info.userId,
-            email = info.email
+        fun fromEntity(entity: RegisterConfirmationInfo): RegisterConfirmationInfoDTO = RegisterConfirmationInfoDTO(
+            uuid = entity.uuid,
+            code = entity.code,
+            userId = entity.userId,
+            email = entity.email,
+            createdAt = entity.createdAt.toString(),
+            updatedAt = entity.updatedAt.toString()
         )
     }
 
@@ -22,6 +27,8 @@ data class RegisterConfirmationInfoDTO(
         uuid = uuid,
         code = code,
         userId = userId,
-        email = email
+        email = email,
+        createdAt = Instant.parse(createdAt),
+        updatedAt = Instant.parse(updatedAt)
     )
 }

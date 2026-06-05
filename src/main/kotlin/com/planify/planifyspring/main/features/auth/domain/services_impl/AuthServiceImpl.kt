@@ -1,25 +1,15 @@
 package com.planify.planifyspring.main.features.auth.domain.services_impl
 
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
+import com.planify.planifyspring.core.exceptions.TooManyRequestsAppError
 import com.planify.planifyspring.core.utils.getRandomString
+import com.planify.planifyspring.core.utils.within
 import com.planify.planifyspring.main.common.utils.SecurityHelper
 import com.planify.planifyspring.main.exceptions.generics.WrongCredentialsHttpException
 import com.planify.planifyspring.main.features.auth.domain.entities.*
 import com.planify.planifyspring.main.features.auth.domain.events.ConfirmationEmailRequestedEvent
 import com.planify.planifyspring.main.features.auth.domain.events.RecoverPasswordEmailRequestedEvent
-import com.planify.planifyspring.main.features.auth.domain.exceptions.BadRecoverPasswordChallengeStateHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.ExpiredRegisterConfirmationCodeHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InactiveSessionHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidRegisterConfirmationCodeHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.InvalidSessionHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.RecoverPasswordChallengeAlreadyPassedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.RecoverPasswordChallengeAttemptFailedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.RecoverPasswordChallengeFailedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.RecoverPasswordChallengeNotPassedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.SuspiciousActivityDetectedHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenExpiredHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.TokenInvalidHttpException
-import com.planify.planifyspring.main.features.auth.domain.exceptions.UnknownUserHttpException
+import com.planify.planifyspring.main.features.auth.domain.exceptions.*
 import com.planify.planifyspring.main.features.auth.domain.repositories.AuthEmailRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.SessionsRepository
 import com.planify.planifyspring.main.features.auth.domain.repositories.TokensRepository
@@ -40,7 +30,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.SignatureException
 import java.time.Duration
+import java.time.Instant
 import java.util.*
+import kotlin.time.Duration.Companion.minutes
 
 @Service
 class AuthServiceImpl(
@@ -54,10 +46,13 @@ class AuthServiceImpl(
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     companion object {
-        private const val REGISTRATION_CONFIRMATION_TTL_MINUTES = 20L
+        private const val EMAIL_RESEND_TIMEOUT_MINUTES = 1L
+
+        private const val REGISTRATION_CONFIRMATION_TTL_MINUTES = 10L
         private val REGISTRATION_CONFIRMATION_TTL: Duration = Duration.ofMinutes(REGISTRATION_CONFIRMATION_TTL_MINUTES)
 
-        private const val PASSWORD_RECOVERY_TTL_MINUTES = 20L
+        private const val PASSWORD_RECOVERY_TTL_MINUTES = 10L
+        private const val PASSWORD_RECOVERY_TIMEOUT_MINUTES = 30L
         private val PASSWORD_RECOVERY_TTL: Duration = Duration.ofMinutes(PASSWORD_RECOVERY_TTL_MINUTES)
         private const val MAX_RECOVERY_ATTEMPTS = 5
     }
@@ -211,7 +206,9 @@ class AuthServiceImpl(
             uuid = generateConfirmationUUID(),
             code = generateConfirmationCode(),
             userId = userId,
-            email = email
+            email = email,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -237,7 +234,9 @@ class AuthServiceImpl(
             userId = userId,
             email = email,
             code = generateConfirmationCode(),
-            uuid = generateConfirmationUUID()
+            uuid = generateConfirmationUUID(),
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -346,11 +345,14 @@ class AuthServiceImpl(
 
     override fun resendRegisterConfirmation(confirmationUuid: String, locale: Locale?) {
         val info = getRegisterConfirmationInfoOrThrow(confirmationUuid)
-        val updatedInfo = info.copy(code = generateConfirmationCode())
 
+        if (info.updatedAt within EMAIL_RESEND_TIMEOUT_MINUTES.minutes) throw TooManyRequestsAppError("Unable to resend email: too many requests")
+
+        val messageLocale = locale ?: getUserLocaleById(info.userId)
+
+        val updatedInfo = info.copy(code = generateConfirmationCode(), updatedAt = Instant.now())
         authEmailRepository.saveRegisterConfirmationInfo(updatedInfo, REGISTRATION_CONFIRMATION_TTL)
-
-        publishConfirmationEmail(email = updatedInfo.email, code = updatedInfo.code, firstName = null, locale = locale)
+        publishConfirmationEmail(email = updatedInfo.email, code = updatedInfo.code, firstName = null, locale = messageLocale)
     }
 
     override fun refresh(refreshToken: String, currentUserAgent: String): AuthTokenPair {
@@ -370,10 +372,18 @@ class AuthServiceImpl(
     @Transactional
     override fun startRecoverPasswordChallenge(email: String, locale: Locale?): String {
         val user = getUserByEmail(email)
+
+        if (user.lastPasswordRecoveredAt within PASSWORD_RECOVERY_TIMEOUT_MINUTES.minutes) throw PasswordRecoveryRateLimitHttpException()
+
+        // TODO: Security issue? (recover lock)
+        if (getUserActiveRecoverPasswordChallenge(user.id) != null) throw PasswordRecoveryInProcessHttpException()
+
+        val messageLocale = locale ?: user.locale
+
         val challenge = generateRecoverPasswordChallenge(userId = user.id, email = email)
 
         saveRecoverPasswordChallenge(challenge)
-        publishRecoverPasswordEmail(email = email, code = challenge.code, locale = locale)
+        publishRecoverPasswordEmail(email = challenge.email, code = challenge.code, locale = messageLocale)
 
         return challenge.uuid
     }
@@ -413,6 +423,22 @@ class AuthServiceImpl(
 
     override fun getUserActiveRecoverPasswordChallenge(userId: Long): String? {
         return authEmailRepository.getUserActiveRecoverPasswordChallengeUUID(userId)
+    }
+
+    override fun resendRecoverPasswordChallengeCode(challengeUUID: String, locale: Locale?) {
+        val challenge = getRecoverPasswordChallengeOrThrow(challengeUUID)
+
+        if (challenge.state == PasswordRecoveryChallengeState.FAILED) throw RecoverPasswordChallengeFailedHttpException()
+        if (challenge.state == PasswordRecoveryChallengeState.PASSED) throw RecoverPasswordChallengeAlreadyPassedHttpException()
+
+        if (challenge.updatedAt within EMAIL_RESEND_TIMEOUT_MINUTES.minutes) throw TooManyRequestsAppError("Unable to resend email: too many requests")
+
+        val messageLocale = locale ?: getUserLocaleById(challenge.userId)
+        val updated = challenge.copy(code = generateConfirmationCode(), updatedAt = Instant.now())
+
+        saveRecoverPasswordChallenge(updated)
+
+        publishRecoverPasswordEmail(email = challenge.email, code = challenge.code, locale = messageLocale)
     }
 
     override fun getSession(userId: Long, sessionUuid: String): AuthSession {

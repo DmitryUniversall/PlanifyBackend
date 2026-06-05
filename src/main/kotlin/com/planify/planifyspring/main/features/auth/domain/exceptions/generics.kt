@@ -122,3 +122,17 @@ class BadRecoverPasswordChallengeStateHttpException(
     appCode = 3021,
     message = message
 )
+
+class PasswordRecoveryRateLimitHttpException(
+    message: String = "Password recovery requested too soon, please try again later"
+) : InternalServerErrorHttpException(
+    appCode = 3022,
+    message = message
+)
+
+class PasswordRecoveryInProcessHttpException(
+    message: String = "Password recovery was already requested, please try again later"
+) : InternalServerErrorHttpException(
+    appCode = 3023,
+    message = message
+)

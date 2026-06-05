@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.*
 
+// TODO: Security — logout doesn't invalidate existing refresh tokens.
+// Stolen refresh token stays valid even after the user logs out and starts a new session.
+
 @Repository
 class SessionsRepositoryImpl(
     private val helper: RedisHelper

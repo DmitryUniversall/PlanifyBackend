@@ -3,6 +3,7 @@ package com.planify.planifyspring.main.features.auth.data.models
 import com.planify.planifyspring.main.features.auth.domain.entities.AccessInfo
 import com.planify.planifyspring.main.features.auth.domain.entities.User
 import jakarta.persistence.*
+import java.time.Instant
 import java.util.Locale
 
 @Entity
@@ -26,6 +27,9 @@ open class UserModel(
 
     @Column(name = "locale", length = 35, nullable = false)
     open var locale: String = "en",
+
+    @Column(name = "last_password_recovered_at", nullable = false)
+    open var lastPasswordRecoveredAt: Instant,
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -51,6 +55,7 @@ open class UserModel(
                 email = entity.email,
                 passwordHash = entity.passwordHash,
                 isActivated = entity.isActivated,
+                lastPasswordRecoveredAt = entity.lastPasswordRecoveredAt
             )
         }
     }
@@ -62,7 +67,8 @@ open class UserModel(
             email = email,
             passwordHash = passwordHash,
             isActivated = isActivated,
-            locale = Locale.forLanguageTag(locale)
+            locale = Locale.forLanguageTag(locale),
+            lastPasswordRecoveredAt = lastPasswordRecoveredAt
         )
     }
 

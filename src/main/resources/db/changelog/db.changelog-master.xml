@@ -19,6 +19,7 @@
     <include file="db/changelog/02/favorites.changelog.xml"/>
     <include file="db/changelog/02/fcm_tokens.changelog.xml"/>
     <include file="db/changelog/02/users_add_locale.changelog.xml"/>
+    <include file="db/changelog/02/users_add_last_password_recovered_at.changelog.xml"/>
 
 
     <!-- 01 data -->
