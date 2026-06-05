@@ -430,6 +430,7 @@ class AuthServiceImpl(
 
         if (challenge.state == PasswordRecoveryChallengeState.FAILED) throw RecoverPasswordChallengeFailedHttpException()
         if (challenge.state == PasswordRecoveryChallengeState.PASSED) throw RecoverPasswordChallengeAlreadyPassedHttpException()
+        if (challenge.state != PasswordRecoveryChallengeState.PENDING) throw BadRecoverPasswordChallengeStateHttpException()
 
         if (challenge.updatedAt within EMAIL_RESEND_TIMEOUT_MINUTES.minutes) throw TooManyRequestsAppError("Unable to resend email: too many requests")
 
