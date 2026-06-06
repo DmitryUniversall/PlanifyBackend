@@ -52,7 +52,7 @@ class AuthServiceImpl(
         private val REGISTRATION_CONFIRMATION_TTL: Duration = Duration.ofMinutes(REGISTRATION_CONFIRMATION_TTL_MINUTES)
 
         private const val PASSWORD_RECOVERY_TTL_MINUTES = 10L
-        private const val PASSWORD_RECOVERY_TIMEOUT_MINUTES = 30L
+        private const val PASSWORD_RECOVERY_TIMEOUT_MINUTES = 0L // 30L  // FIXME: Temp disabled
         private val PASSWORD_RECOVERY_TTL: Duration = Duration.ofMinutes(PASSWORD_RECOVERY_TTL_MINUTES)
         private const val MAX_RECOVERY_ATTEMPTS = 5
     }
