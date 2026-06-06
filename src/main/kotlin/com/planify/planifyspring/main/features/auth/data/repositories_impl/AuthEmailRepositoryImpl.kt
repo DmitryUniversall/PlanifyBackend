@@ -36,6 +36,10 @@ class AuthEmailRepositoryImpl(
         return dto?.toEntity()
     }
 
+    override fun deleteRegisterConfirmationInfo(uuid: String) {
+        helper.del(getConfirmationKey(uuid))
+    }
+
     override fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge, ttl: Duration) {
         val key = getPasswordRecoveryKey(passwordRecoveryChallenge.uuid)
         helper.set(key, PasswordRecoveryChallengeDTO.fromEntity(passwordRecoveryChallenge))

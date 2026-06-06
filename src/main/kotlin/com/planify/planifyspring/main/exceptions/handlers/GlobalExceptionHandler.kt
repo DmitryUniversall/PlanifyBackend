@@ -10,6 +10,7 @@ import com.planify.planifyspring.core.exceptions.ApplicationException
 import com.planify.planifyspring.core.exceptions.ExpiredAppError
 import com.planify.planifyspring.core.exceptions.InvalidArgumentAppError
 import com.planify.planifyspring.core.exceptions.NotFoundAppError
+import com.planify.planifyspring.core.exceptions.TooManyRequestsAppError
 import com.planify.planifyspring.core.exceptions.UnprocessableEntityAppError
 import com.planify.planifyspring.main.common.entities.ApplicationResponse
 import com.planify.planifyspring.main.exceptions.ApplicationHttpException
@@ -141,6 +142,12 @@ class GlobalExceptionHandler {
     fun handleExpiredAppError(e: ExpiredAppError): ResponseEntity<ApplicationResponse<Nothing>> {
         logger.debug("ExpiredAppError: {}", e.message)
         return buildErrorResponse(error = e, status = HttpStatus.GONE, appCode = 2012, message = e.message)
+    }
+
+    @ExceptionHandler(TooManyRequestsAppError::class)
+    fun handleExpiredAppError(e: TooManyRequestsAppError): ResponseEntity<ApplicationResponse<Nothing>> {
+        logger.debug("TooManyRequestsAppError: {}", e.message)
+        return buildErrorResponse(error = e, status = HttpStatus.TOO_MANY_REQUESTS, appCode = 2013, message = e.message)
     }
 
     @ExceptionHandler(UnprocessableEntityAppError::class)

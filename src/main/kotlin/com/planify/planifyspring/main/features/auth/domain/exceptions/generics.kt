@@ -1,6 +1,9 @@
 package com.planify.planifyspring.main.features.auth.domain.exceptions
 
+import com.planify.planifyspring.core.exceptions.TooManyRequestsAppError
+import com.planify.planifyspring.main.exceptions.generics.BadRequestHttpException
 import com.planify.planifyspring.main.exceptions.generics.InternalServerErrorHttpException
+import com.planify.planifyspring.main.exceptions.generics.TooManyRequestsHttpException
 import com.planify.planifyspring.main.exceptions.generics.UnauthorizedHttpException
 
 class TokenInvalidHttpException(
@@ -77,41 +80,41 @@ class InactiveSessionHttpException(
 class InvalidRegisterConfirmationCodeHttpException(
     message: String? = "Confirmation code invalid"
 ) : UnauthorizedHttpException(
-    appCode = 3015,
+    appCode = 3015,  // TODO: Change status codes to 6XXX
     message = message
 )
 
 class ExpiredRegisterConfirmationCodeHttpException(
     message: String = "Confirmation code expired"
-) : UnauthorizedHttpException(
+) : BadRequestHttpException(
     appCode = 3016,
     message = message
 )
 
 class RecoverPasswordChallengeFailedHttpException(
     message: String = "Recover password challenge failed"
-) : UnauthorizedHttpException(
+) : BadRequestHttpException(
     appCode = 3017,
     message = message
 )
 
 class RecoverPasswordChallengeAlreadyPassedHttpException(
     message: String = "Recover password challenge already passed"
-) : UnauthorizedHttpException(
+) : BadRequestHttpException(
     appCode = 3018,
     message = message
 )
 
 class RecoverPasswordChallengeAttemptFailedHttpException(
     message: String = "Recover password challenge attempt failed"
-) : UnauthorizedHttpException(
+) : BadRequestHttpException(
     appCode = 3019,
     message = message
 )
 
 class RecoverPasswordChallengeNotPassedHttpException(
     message: String = "Recover password challenge not passed"
-) : UnauthorizedHttpException(
+) : BadRequestHttpException(
     appCode = 3020,
     message = message
 )
@@ -125,14 +128,14 @@ class BadRecoverPasswordChallengeStateHttpException(
 
 class PasswordRecoveryRateLimitHttpException(
     message: String = "Password recovery requested too soon, please try again later"
-) : InternalServerErrorHttpException(
+) : TooManyRequestsHttpException(
     appCode = 3022,
     message = message
 )
 
 class PasswordRecoveryInProcessHttpException(
     message: String = "Password recovery was already requested, please try again later"
-) : InternalServerErrorHttpException(
+) : BadRequestHttpException(
     appCode = 3023,
     message = message
 )

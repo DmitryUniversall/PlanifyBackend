@@ -105,11 +105,11 @@ class AuthFeatureController(
         )
     }
 
-    @PostMapping("/register/{confirmationUuid}/resend")
+    @PostMapping("/register/{confirmationUUID}/resend")
     fun resendRegisterConfirmation(
-        @PathVariable confirmationUuid: String
+        @PathVariable confirmationUUID: String
     ): ResponseEntity<ApplicationResponse<Nothing>> {
-        authService.resendRegisterConfirmation(confirmationUuid = confirmationUuid)
+        authService.resendRegisterConfirmation(confirmationUuid = confirmationUUID)
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 

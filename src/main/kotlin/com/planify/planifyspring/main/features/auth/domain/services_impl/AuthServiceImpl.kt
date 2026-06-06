@@ -328,7 +328,7 @@ class AuthServiceImpl(
         sessionName: String?
     ): Pair<AuthContext, AuthTokenPair> {
         val confirmationInfo = getRegisterConfirmationInfoOrThrow(confirmationUuid)
-        if (code != confirmationInfo.code) throw InvalidRegisterConfirmationCodeHttpException()
+        if (code != confirmationInfo.code) throw InvalidRegisterConfirmationCodeHttpException()  // TODO: Add attempts?
 
         val userInactive = getUserById(confirmationInfo.userId)
         val userActivated = activateUser(userInactive)
@@ -340,9 +340,12 @@ class AuthServiceImpl(
             clientName = clientName
         )
 
+        authEmailRepository.deleteRegisterConfirmationInfo(confirmationUuid)
+
         return AuthContext(session = session, user = userActivated, accessInfo = AccessInfo()) to tokens
     }
 
+    @Transactional
     override fun resendRegisterConfirmation(confirmationUuid: String, locale: Locale?) {
         val info = getRegisterConfirmationInfoOrThrow(confirmationUuid)
 
@@ -352,6 +355,7 @@ class AuthServiceImpl(
 
         val updatedInfo = info.copy(code = generateConfirmationCode(), updatedAt = Instant.now())
         authEmailRepository.saveRegisterConfirmationInfo(updatedInfo, REGISTRATION_CONFIRMATION_TTL)
+
         publishConfirmationEmail(email = updatedInfo.email, code = updatedInfo.code, firstName = null, locale = messageLocale)
     }
 
@@ -426,6 +430,7 @@ class AuthServiceImpl(
         return authEmailRepository.getUserActiveRecoverPasswordChallengeUUID(userId)
     }
 
+    @Transactional
     override fun resendRecoverPasswordChallengeCode(challengeUUID: String, locale: Locale?) {
         val challenge = getRecoverPasswordChallengeOrThrow(challengeUUID)
 

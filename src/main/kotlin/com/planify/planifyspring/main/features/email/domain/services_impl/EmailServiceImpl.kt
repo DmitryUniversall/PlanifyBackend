@@ -2,6 +2,7 @@ package com.planify.planifyspring.main.features.email.domain.services_impl
 
 import com.planify.planifyspring.main.config.properties.EmailServiceConfiguration
 import com.planify.planifyspring.main.features.email.domain.services.EmailService
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -17,18 +18,28 @@ class EmailServiceImpl(
     private val config: EmailServiceConfiguration,
     private val templateEngine: TemplateEngine
 ) : EmailService {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     @Async("mailExecutor")
     override fun sendHtmlMessage(to: String, subject: String, html: String): CompletableFuture<Void> {
-        val message = mailSender.createMimeMessage()
-        val helper = MimeMessageHelper(message, true, "UTF-8")
+        return try {
+            val message = mailSender.createMimeMessage()
 
-        helper.setFrom(config.from)
-        helper.setTo(to)
-        helper.setSubject(subject)
-        helper.setText(html, true)
+            MimeMessageHelper(message, true, "UTF-8").apply {
+                setFrom(config.from)
+                setTo(to)
+                setSubject(subject)
+                setText(html, true)
+            }
 
-        mailSender.send(message)
-        return CompletableFuture.completedFuture(null)
+            mailSender.send(message)
+
+            CompletableFuture.completedFuture(null)
+        } catch (ex: Exception) {
+            log.error("Failed to send email for $to", ex)
+
+            CompletableFuture.failedFuture(ex)
+        }
     }
 
     @Async("mailExecutor")

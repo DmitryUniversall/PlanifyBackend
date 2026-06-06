@@ -12,6 +12,15 @@ open class InternalServerErrorHttpException(
     message = message
 )
 
+open class TooManyRequestsHttpException(
+    message: String?,
+    appCode: Int = 2013
+) : ApplicationHttpException(
+    httpStatus = HttpStatus.TOO_MANY_REQUESTS,
+    appCode = appCode,
+    message = message
+)
+
 open class AlreadyExistsHttpException(
     message: String?,
     appCode: Int = 2001,

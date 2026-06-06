@@ -7,6 +7,7 @@ import java.time.Duration
 interface AuthEmailRepository {
     fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo, ttl: Duration)
     fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo?
+    fun deleteRegisterConfirmationInfo(uuid: String)
 
     fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge?
     fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge, ttl: Duration)

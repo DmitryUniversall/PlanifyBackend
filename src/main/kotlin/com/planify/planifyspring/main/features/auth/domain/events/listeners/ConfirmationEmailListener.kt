@@ -15,7 +15,6 @@ class ConfirmationEmailListener(
     private val emailService: EmailService,
     private val messageSource: MessageSource
 ) {
-    @Async("mailExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun on(event: ConfirmationEmailRequestedEvent) {
         val locale = event.locale ?: Locale.ENGLISH
