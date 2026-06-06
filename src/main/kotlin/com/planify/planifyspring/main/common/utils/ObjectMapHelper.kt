@@ -5,7 +5,7 @@ import tools.jackson.databind.ObjectMapper
 import kotlin.reflect.full.memberProperties
 
 @Component
-class ObjectMapperHelper(
+class ObjectMapHelper(
     private val objectMapper: ObjectMapper
 ) {
     fun <T : Any> convertToStringsMap(value: T): Map<String, String> {

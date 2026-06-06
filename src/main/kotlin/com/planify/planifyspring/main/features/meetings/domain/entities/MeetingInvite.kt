@@ -11,5 +11,5 @@ data class MeetingInvite(
     val createdAt: Instant,
     val updatedAt: Instant,
     val expiresAt: Instant,
-    val statusData: Any? = null
+    val statusData: Any? = null  // TODO: Make sealed interface?
 )

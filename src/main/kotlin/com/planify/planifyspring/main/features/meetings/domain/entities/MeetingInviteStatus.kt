@@ -4,5 +4,6 @@ enum class MeetingInviteStatus {
     PENDING,
     ACCEPTED,
     REJECTED,
-    RESCHEDULE_REQUESTED
+    RESCHEDULE_REQUESTED,
+    EXPIRED
 }

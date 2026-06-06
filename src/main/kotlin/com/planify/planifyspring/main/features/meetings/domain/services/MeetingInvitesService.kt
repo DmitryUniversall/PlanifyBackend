@@ -19,4 +19,6 @@ interface MeetingInvitesService {
     fun responseRescheduleInvite(inviteUuid: String, shouldReschedule: Boolean, requesterId: Long)
 
     fun isUserInvited(meetingId: Long, userId: Long): Boolean
+
+    fun getUserSentInvites(userId: Long): List<MeetingInvite>
 }

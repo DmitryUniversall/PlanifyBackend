@@ -29,7 +29,7 @@ class SessionsRepositoryImpl(
     }
 
     private fun writeSession(session: AuthSession) {
-        helper.hset(
+        helper.hsetObject(
             key = getUserSessionKey(userId = session.userId, sessionUuid = session.uuid),
             value = AuthSessionDTO.fromEntity(session)
         )
@@ -64,15 +64,15 @@ class SessionsRepositoryImpl(
     override fun getSession(
         userId: Long, sessionUuid: String
     ): AuthSession? {
-        return helper.hget(
+        return helper.hgetObject(
             key = getUserSessionKey(userId, sessionUuid),
             clazz = AuthSessionDTO::class.java
         )?.toEntity()
     }
 
     override fun getUserSessions(userId: Long): List<AuthSession> {
-        return helper.hgetAllSubkeys(
-            base = "${getUserSessionsKey(userId)}:*",
+        return helper.hgetObjectsByPattern(
+            pattern = "${getUserSessionsKey(userId)}:*",
             clazz = AuthSessionDTO::class.java
         ).map { it.toEntity() }
     }
@@ -86,7 +86,7 @@ class SessionsRepositoryImpl(
         if (soft) {
             updateSession(userId = userId, sessionUuid = sessionUuid, set = "active" to false)
         } else {
-            helper.hdel(key = sessionKey)
+            helper.hdelFields(key = sessionKey)
         }
     }
 

@@ -419,6 +419,7 @@ class AuthServiceImpl(
         val user = getUserById(challenge.userId)
         updateUserPassword(user, newPassword)
         authEmailRepository.deleteRecoverPasswordChallenge(challengeUUID, user.id)
+        // TODO: Send action to notify user
     }
 
     override fun getUserActiveRecoverPasswordChallenge(userId: Long): String? {

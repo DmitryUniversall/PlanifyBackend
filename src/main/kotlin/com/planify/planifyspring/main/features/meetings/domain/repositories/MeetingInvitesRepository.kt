@@ -13,5 +13,11 @@ interface MeetingInvitesRepository {
 
     fun getMeetingInvites(meetingId: Long): List<MeetingInvite>
 
-    fun isUserInvited(meetingId: Long, userId: Long): Boolean
+    fun hasActiveInvite(meetingId: Long, userId: Long): Boolean
+
+    fun getUserSentInvites(userId: Long): List<MeetingInvite>
+
+    fun deleteInvite(uuid: String)
+
+    fun getManyInvites(uuids: Collection<String>): List<MeetingInvite>
 }

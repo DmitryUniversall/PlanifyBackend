@@ -1,17 +1,10 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
-import com.planify.planifyspring.main.common.utils.ObjectMapperHelper
+import com.planify.planifyspring.main.common.utils.ObjectMapHelper
 import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInvite
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingInviteStatus
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteAlreadyRepliedAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteExpiredAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.InviteNotFoundAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingAlreadyStartedAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.MeetingTimeConflictAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.RescheduleNotRequestedAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.TargetAlreadyInvitedAppError
-import com.planify.planifyspring.main.features.meetings.domain.exceptions.TargetAlreadyParticipantAppError
+import com.planify.planifyspring.main.features.meetings.domain.exceptions.*
 import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingInvitePolicy
 import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingPolicy
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingInvitesRepository
@@ -29,7 +22,7 @@ class MeetingInvitesServiceImpl(
     val meetingInvitesRepository: MeetingInvitesRepository,
     val actionsService: ActionsService,
     val meetingsService: MeetingsService,
-    val objectMapperHelper: ObjectMapperHelper,
+    val objectMapHelper: ObjectMapHelper,
     val meetingPolicy: MeetingPolicy,
     val meetingInvitePolicy: MeetingInvitePolicy
 ) : MeetingInvitesService {
@@ -256,7 +249,7 @@ class MeetingInvitesServiceImpl(
 
         if (shouldReschedule) {
             @Suppress("UNCHECKED_CAST")
-            val rescheduleTo = objectMapperHelper.convertFromStringsMap(
+            val rescheduleTo = objectMapHelper.convertFromStringsMap(
                 invite.statusData!! as Map<String, String>,
                 InviteRescheduleStatusDataScheme::class.java
             ).rescheduleTo
@@ -293,5 +286,9 @@ class MeetingInvitesServiceImpl(
     @Transactional(readOnly = true)
     override fun isUserInvited(meetingId: Long, userId: Long): Boolean {
         return getMeetingInvites(meetingId).any { it.targetId == userId }
+    }
+
+    override fun getUserSentInvites(userId: Long): List<MeetingInvite> {
+        return meetingInvitesRepository.getUserSentInvites(userId = userId)
     }
 }

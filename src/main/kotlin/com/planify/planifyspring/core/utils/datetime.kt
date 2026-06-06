@@ -60,3 +60,5 @@ operator fun Instant.minus(duration: Duration): Instant = minus(duration.toJavaD
 //fun Instant.elapsedMillis(): Long = System.currentTimeMillis() - toEpochMilli()
 //infix fun Duration.since(instant: Instant): Boolean =
 //    instant.elapsedMillis() >= inWholeMilliseconds
+
+infix fun Instant.before(instant: Instant): Boolean = this.isBefore(instant)

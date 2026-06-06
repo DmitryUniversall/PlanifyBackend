@@ -27,23 +27,23 @@ class AuthEmailRepositoryImpl(
 
     override fun saveRegisterConfirmationInfo(info: RegisterConfirmationInfo, ttl: Duration) {
         val key = getConfirmationKey(info.uuid)
-        helper.hset(key, RegisterConfirmationInfoDTO.fromEntity(info))
-        helper.expire(key, ttl)
+        helper.hsetObject(key, RegisterConfirmationInfoDTO.fromEntity(info))
+        helper.setTTL(key, ttl)
     }
 
     override fun getRegisterConfirmationInfo(uuid: String): RegisterConfirmationInfo? {
-        val dto = helper.hget(getConfirmationKey(uuid), RegisterConfirmationInfoDTO::class.java)
+        val dto = helper.hgetObject(getConfirmationKey(uuid), RegisterConfirmationInfoDTO::class.java)
         return dto?.toEntity()
     }
 
     override fun saveRecoverPasswordChallenge(passwordRecoveryChallenge: PasswordRecoveryChallenge, ttl: Duration) {
         val key = getPasswordRecoveryKey(passwordRecoveryChallenge.uuid)
         helper.set(key, PasswordRecoveryChallengeDTO.fromEntity(passwordRecoveryChallenge))
-        helper.expire(key, ttl)
+        helper.setTTL(key, ttl)
 
         val userActiveChallengeKey = getUserActiveRecoveryChallengeKey(passwordRecoveryChallenge.userId)
         helper.set(userActiveChallengeKey, passwordRecoveryChallenge.uuid)
-        helper.expire(userActiveChallengeKey, ttl)
+        helper.setTTL(userActiveChallengeKey, ttl)
     }
 
     override fun getRecoverPasswordChallenge(challengeUUID: String): PasswordRecoveryChallenge? {

@@ -8,6 +8,7 @@ import com.planify.planifyspring.main.features.meetings.domain.services.MeetingI
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import com.planify.planifyspring.main.features.meetings.routing.dto.MeetingInviteDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.get_invite.GetInviteResponseDTO
+import com.planify.planifyspring.main.features.meetings.routing.dto.get_user_sent_invites.GetUserSentInvitesResponseDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_request.RescheduleRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.reschedule_response.RescheduleAnswerRequestDTO
 import com.planify.planifyspring.main.features.meetings.routing.dto.send_invite.SendInviteRequestDTO
@@ -39,6 +40,17 @@ class MeetingInvitesController(
                 invite = MeetingInviteDTO.fromEntity(invite)
             ).asSuccessApplicationResponse()
         )
+    }
+
+    @GetMapping("/my/sent")
+    fun getUserSentInvites(
+        @AuthenticationPrincipal authContext: AuthContext,
+    ): ResponseEntity<ApplicationResponse<GetUserSentInvitesResponseDTO>> {
+        val invites = meetingInvitesService.getUserSentInvites(userId = authContext.user.id)
+
+        return ResponseEntity.ok(GetUserSentInvitesResponseDTO(
+            invites = invites.map { MeetingInviteDTO.fromEntity(it) }
+        ).asSuccessApplicationResponse())
     }
 
     @GetMapping("/{inviteUuid}")
