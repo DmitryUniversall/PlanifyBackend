@@ -216,7 +216,7 @@ class AuthFeatureController(
         return ResponseEntity.ok(ApplicationResponse.success())
     }
 
-    @PostMapping("/recovery/password/challenge{challengeUUID}/resend")
+    @PostMapping("/recovery/password/challenge/{challengeUUID}/resend")
     fun resendRecoverPasswordChallengeCode(
         @PathVariable challengeUUID: String
     ): ResponseEntity<ApplicationResponse<Nothing>> {
