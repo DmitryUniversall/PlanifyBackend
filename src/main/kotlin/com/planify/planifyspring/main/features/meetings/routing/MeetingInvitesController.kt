@@ -74,7 +74,7 @@ class MeetingInvitesController(
                     invite = MeetingInviteDTO.fromEntity(invite),
                     meeting = MeetingDTO.fromEntity(meetingsService.getMeetingById(invite.meetingId)),
                     senderProfile = ProfileDTO.fromEntity(profilesService.getProfileById(invite.senderId)),
-                    targetProfile = ProfileDTO.fromEntity(profilesService.getProfileById(invite.senderId))
+                    targetProfile = ProfileDTO.fromEntity(profilesService.getProfileById(invite.targetId))
                 )
             }
         ).asSuccessApplicationResponse())
