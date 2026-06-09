@@ -1,5 +1,6 @@
 package com.planify.planifyspring.main.features.profiles.domain.services_impl
 
+import com.planify.planifyspring.core.exceptions.NotFoundAppError
 import com.planify.planifyspring.main.features.profiles.domain.entiries.Profile
 import com.planify.planifyspring.main.features.profiles.domain.repositories.ProfilesRepository
 import com.planify.planifyspring.main.features.profiles.domain.schemas.CreateProfileSchema
@@ -14,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 class ProfilesServiceImpl(
     private val profilesRepository: ProfilesRepository,
 ) : ProfilesService {
-    override fun getProfileById(userId: Long): Profile? {
-        return profilesRepository.getProfileById(userId)
+    override fun getProfileById(userId: Long): Profile {
+        return profilesRepository.getProfileById(userId) ?: throw NotFoundAppError("Profile was not found")
     }
 
     @Transactional

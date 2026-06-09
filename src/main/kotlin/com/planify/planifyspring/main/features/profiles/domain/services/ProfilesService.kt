@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
 interface ProfilesService {
-    fun getProfileById(userId: Long): Profile?
+    fun getProfileById(userId: Long): Profile
 
     fun patchProfile(userId: Long, patch: PatchProfileSchema)
 
