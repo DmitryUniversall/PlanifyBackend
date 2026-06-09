@@ -42,7 +42,7 @@ class FavoritesController(
 
     @DeleteMapping("/my")
     fun removeFavorite(
-        @RequestBody body: RemoveFavoriteRequestDTO,
+        @RequestBody body: RemoveFavoriteRequestDTO,  // TODO: Use path param?
         @AuthenticationPrincipal principal: AuthContext
     ): ResponseEntity<ApplicationResponse<Nothing>> {
         val userId = principal.user.id
