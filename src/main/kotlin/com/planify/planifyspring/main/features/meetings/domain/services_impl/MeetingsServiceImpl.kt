@@ -1,6 +1,7 @@
 package com.planify.planifyspring.main.features.meetings.domain.services_impl
 
 import com.planify.planifyspring.core.utils.atStartOfAnHour
+import com.planify.planifyspring.main.features.actions.domain.services.ActionsService
 import com.planify.planifyspring.main.features.meetings.domain.entities.Meeting
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingParticipant
 import com.planify.planifyspring.main.features.meetings.domain.entities.MeetingWithParticipantIds
@@ -10,6 +11,7 @@ import com.planify.planifyspring.main.features.meetings.domain.exceptions.Meetin
 import com.planify.planifyspring.main.features.meetings.domain.exceptions.RescheduleToPastAppError
 import com.planify.planifyspring.main.features.meetings.domain.policies.MeetingPolicy
 import com.planify.planifyspring.main.features.meetings.domain.repositories.MeetingsRepository
+import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingActionMeetingUpdatedSchema
 import com.planify.planifyspring.main.features.meetings.domain.schemas.MeetingPatchSchema
 import com.planify.planifyspring.main.features.meetings.domain.services.MeetingsService
 import org.springframework.stereotype.Service
@@ -18,6 +20,7 @@ import java.time.Instant
 
 @Service
 class MeetingsServiceImpl(
+    val actionsService: ActionsService,
     val meetingsRepository: MeetingsRepository,
     val meetingPolicy: MeetingPolicy
 ) : MeetingsService {
@@ -66,6 +69,17 @@ class MeetingsServiceImpl(
         if (meeting.startsAt < Instant.now()) throw RescheduleToPastAppError()
 
         meetingsRepository.patchMeeting(meetingId, patch)
+
+        actionsService.createAction(
+            scope = "meeting:$meetingId",
+            type = "meetings:meeting:updated",
+            data = MeetingActionMeetingUpdatedSchema(
+                updaterId = requesterId,
+                meetingId = meetingId,
+                patch = patch,
+                updatedAt = Instant.now()
+            )
+        )
     }
 
     @Transactional(readOnly = true)
@@ -90,11 +104,27 @@ class MeetingsServiceImpl(
     }
 
     @Transactional
-    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant) {
+    override fun rescheduleMeeting(meetingId: Long, rescheduleTo: Instant, requesterId: Long) {
+        val patch = MeetingPatchSchema(
+            startsAt = rescheduleTo
+        )
+
+        val meeting = meetingsRepository.getMeetingById(meetingId) ?: throw MeetingNotFoundAppError()
+        meetingPolicy.assertIsOwner(requesterId, meeting)
+
         meetingsRepository.patchMeeting(
             meetingId = meetingId,
-            patch = MeetingPatchSchema(
-                startsAt = rescheduleTo
+            patch = patch
+        )
+
+        actionsService.createAction(
+            scope = "meeting:$meetingId",
+            type = "meetings:meeting:updated",
+            data = MeetingActionMeetingUpdatedSchema(
+                updaterId = requesterId,
+                meetingId = meetingId,
+                patch = patch,
+                updatedAt = Instant.now()
             )
         )
     }

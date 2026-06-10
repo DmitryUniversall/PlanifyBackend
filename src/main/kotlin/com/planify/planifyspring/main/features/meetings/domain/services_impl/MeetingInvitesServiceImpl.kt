@@ -76,7 +76,7 @@ class MeetingInvitesServiceImpl(
             type = "meetings:meeting:invited",
             data = MeetingActionUserInvitedSchema(
                 senderId = senderId,
-                targetId = meetingId,
+                targetId = targetId,
                 meetingId = meetingId,
                 inviteUuid = invite.uuid,
                 createdAt = invite.createdAt
@@ -253,7 +253,8 @@ class MeetingInvitesServiceImpl(
                 invite.statusData!! as Map<String, String>,
                 InviteRescheduleStatusDataScheme::class.java
             ).rescheduleTo
-            meetingsService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo)
+
+            meetingsService.rescheduleMeeting(meetingId = invite.meetingId, rescheduleTo = rescheduleTo, requesterId = requesterId)
         }
 
         actionsService.createUserAction(

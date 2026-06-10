@@ -45,7 +45,8 @@ interface MeetingsService {
 
     fun rescheduleMeeting(
         meetingId: Long,
-        rescheduleTo: Instant
+        rescheduleTo: Instant,
+        requesterId: Long
     )
 
     fun getMeetingWithParticipantIds(
